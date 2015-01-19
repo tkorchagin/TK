@@ -64,12 +64,12 @@
 .
 
 //@u98hfo9[atomic]
-+!calc_util <-
-		-+run;
++!calc_util(NR) <-
+		-+run(NR);
 		?parts(Parts);  
 		.abolish(util(_,_));
 		.abolish(util(_));
-		.send(Parts,achieve,calc_util);
+		.send(Parts,achieve,calc_util(NR));
 		!check(util(Util));
 		?name(Name);
 		!print(util(Name,Util));
@@ -80,7 +80,7 @@
 
 //@shg8ubv8[atomic]
 +util(_,_) : .count(util(_,_),8)	<-
-			if(run) {
+			if(run(1)) {
 				.findall(tuple(A1,B1),util(_,tuple(A1,B1)),UtilList);
 				!get_sum_util(UtilList,Util);
 			} else {
