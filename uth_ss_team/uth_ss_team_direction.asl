@@ -79,7 +79,8 @@
 .
 
 //@shg8ubv8[atomic]
-+util(_,_) : .count(util(_,_),8)	<-
++util(_,_) : .count(util(_,_),8)
+<-
 			if(run) {
 				.findall(tuple(A1,B1),util(_,tuple(A1,B1)),UtilList);
 				!get_sum_util(UtilList,Util);
@@ -95,8 +96,7 @@
 
 +!get_sum_util([],tuple(0,0)).
 
-+!get_sum_util([tuple(A,B)|Tail],
-	tuple(Asum,Bsum)) <-
++!get_sum_util([tuple(A,B)|Tail], tuple(Asum,Bsum)) <-
 		!get_sum_util(Tail,tuple(A1,B1));
 		Asum = A+A1;
 		Bsum = B+B1;

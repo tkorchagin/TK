@@ -468,7 +468,6 @@ maxcycles(20*Nteams) :- nteams(Nteams).
 +!position([PartName|Tail],_) <-
 			!print(find);
 			?name(Name);
-			?run;
 			?part_name(PartNo,PartName);
 			?plusutil(PartNo,PU);
 			

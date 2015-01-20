@@ -35,8 +35,6 @@ max_repcycles(2).
 .
 
 
-
-
 +!run <-
 				?id(Id);
 				if(not (ndirections(0) | nteams(0))) {
@@ -52,11 +50,20 @@ max_repcycles(2).
 						-+run;
 						!iterate;
 					};
+					
+					// DO Scalar:
+					.findall(A1*10000 + B1,util(_,tuple(A1,B1)),UtilList);
+					.print(UtilList);
+					Util = math.sum(UtilList);
+					-+util(Util);
+					// Dode ^^
+					
 					.print("Finished"); 
 				} else {
 					.puts("Plnannig will not be done for depot # #{Id} due to lack of direction or teams data");
 				};	
 				!check(main(Main));
+				
 				.send(Main,tell,depot_finished(Id));						
 .
 
@@ -77,6 +84,7 @@ max_repcycles(2).
 				.abolish(util(_,_));
 				?directions(DirList);
 				.send(DirList,achieve,calc_util);
+				
 				!check(util(Util));
 				?id(Id);
 				.print(uTIL(Id,I,Util));
@@ -109,7 +117,7 @@ max_repcycles(2).
 //@shg8ubv8[atomic]
 +util(_,_) : .count(util(_,_),N) & ndirections(N)  
 			<-
-			if(run(1)) {
+			if(run) {
 				.findall(tuple(A1,B1),util(_,tuple(A1,B1)),UtilList);
 				!get_sum_util(UtilList,Util);
 			} else {
