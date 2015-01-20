@@ -1,0 +1,6 @@
+MAS auctions {
+	infrastructure : Centralised
+	//environment: lines_Env
+	
+	agents: main;
+}
