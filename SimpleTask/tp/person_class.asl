@@ -12,7 +12,7 @@ prices_received(0).
 
 step(0).
 
-localmaxstep(LMS) :- myclassCapacity(MCC) & .max([MCC,20],LMS).
+localmaxstep(LMS) :- myclassCapacity(MCC) & .max([MCC,30],LMS).
 
 dimension(Dim) :- nobject_classes(Dim).
 
@@ -57,9 +57,11 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 +!sleep <-
 	?weight(Weight);
 	-+weight(0);
-	?main(Main);
-	.send(Main,achieve,addweight(Weight));
-	!wait(added[source(Main)]); 
+	if(Weight > 0) {
+		?main(Main);
+		.send(Main,achieve,addweight(Weight));
+		!wait(added[source(Main)]);
+	}
 .	
 
 
@@ -263,12 +265,18 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 			,TailOblectClassesList);
 		.union([],TailOblectClassesList,TailOblectClassesSet);
 		.delete(NewBidProfitsHead,TailOblectClassesSet,TailOblectClasses);
+		/*.print(t(TailOblectClasses));
+		.print(s(OtherProfits));
+		.print(mcf(MyClassFlows));*/
 		for(.member(CurOClass,TailOblectClasses)){
 			.findall(CurFlow,
 				.member(profit(_,CurFlow,_,CurOClass), OtherProfits) 
 				,CurFlows);		// second equation on p.88 from ref.1
+			//.print(c(CurOClass,CurFlows));
 			AddCurFlow = math.sum(CurFlows);
-			.member(flow(CurOClassFlow,CurOClass),MyClassFlows);
+			if(not 	.member(flow(CurOClassFlow,CurOClass),
+				MyClassFlows)) 
+				{ CurOClassFlow = 0; }
 			?newflows(Flows);
 			-+newflows([flow(CurOClassFlow + AddCurFlow,CurOClass)
 				|Flows]);

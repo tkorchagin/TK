@@ -179,3 +179,29 @@ Output:
 [main] Assign from source t1 to sink r1 total of 10 resources
 [main] Assign from source t2 to sink r2 total of 20 resources
 [main] calculation time: 0.431 s
+----------
+source(id(t1),exceed(12)). sink(id(r1),need(130)). 
+source(id(t2),exceed(102)). sink(id(r2),need(11)).
+source(id(t3),exceed(10)).
+source(id(t4),exceed(12)). 
+
+crosscost(source(t1),sink(r1),cost(10)).
+crosscost(source(t1),sink(r2),cost(40)).
+crosscost(source(t2),sink(r1),cost(20)).
+crosscost(source(t2),sink(r2),cost(10)).
+crosscost(source(t3),sink(r1),cost(50)).
+crosscost(source(t3),sink(r2),cost(30)).
+crosscost(source(t4),sink(r1),cost(502)).
+crosscost(source(t4),sink(r2),cost(1)).
+
+Output:
+[tp] Transportation task solver utility based on Bertsekas-Catanon auction algorithm. Version 4.2
+[main] Total utility: 696
+[main] Total cost: 8484
+[main] Total steps: 6
+[tp] run_no(1)
+[main] Assign from source t3 to sink r2 total of 10 resources
+[main] Assign from source t2 to sink r1 total of 102 resources
+[main] Assign from source t1 to sink r1 total of 12 resources
+[main] Assign from source t4 to sink r1 total of 12 resources
+[main] calculation time: 0.553 s

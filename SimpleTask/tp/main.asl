@@ -1,20 +1,17 @@
 
-source(id(t1),exceed(10)). sink(id(r1),need(100)). 
-source(id(t2),exceed(20)). sink(id(r2),need(100)).
-source(id(t3),exceed(2)). 
-source(id(t4),exceed(3)). 
-source(id(t5),exceed(12)). 
+source(id(t1),exceed(12)). sink(id(r1),need(130)). 
+source(id(t2),exceed(102)). sink(id(r2),need(11)).
+source(id(t3),exceed(10)).
+source(id(t4),exceed(12)). 
 
 crosscost(source(t1),sink(r1),cost(10)).
 crosscost(source(t1),sink(r2),cost(40)).
 crosscost(source(t2),sink(r1),cost(20)).
 crosscost(source(t2),sink(r2),cost(10)).
-crosscost(source(t3),sink(r1),cost(10)).
-crosscost(source(t3),sink(r2),cost(3)).
-crosscost(source(t4),sink(r1),cost(20)).
+crosscost(source(t3),sink(r1),cost(50)).
+crosscost(source(t3),sink(r2),cost(30)).
+crosscost(source(t4),sink(r1),cost(502)).
 crosscost(source(t4),sink(r2),cost(1)).
-crosscost(source(t5),sink(r1),cost(15)).
-crosscost(source(t5),sink(r2),cost(3)).
 
 
 

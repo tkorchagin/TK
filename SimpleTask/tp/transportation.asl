@@ -1,5 +1,6 @@
 debug.
 //opdebug.
+nokill.
 
 step(0).
 sent(0).
@@ -22,6 +23,9 @@ version("Version 4.2").
 
 Version 4.2 Debug: 	1) LocalMaxSteps corrected
 					2) Sinks & Sources messed up - fixed
+					3) Non-positove capacities are filtered 
+					4) Costs number is put under control
+					5) MyClass flows in pclass were not checked for empty list
 
 This routine implements solution of the 
 Trasportation Problem described at 
@@ -67,9 +71,13 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 init.
 
 +init <-
-	?version(Version);
-	.print("Transportation task solver initiated. ", Version);
+				// identify myself
+				?version(Version);
+				.print("Transportation task solver utility",
+				" based on Bertsekas-Catanon auction algorithm. ", Version);
+
 .	
+
 
 @sdljnfksrjnf[atomic]
 +epsilon_factor(EF)[source(A)] : A \== self <-
@@ -84,6 +92,10 @@ init.
 	!check(.count(sink(_,_),Nsinks) & nsinks(Nsinks));
 	!check(.count(crosscost(_,_,_),Ncosts) & ncosts(Ncosts));
 .
+
+
+
+
 
 +!stop(A) <-
 	.print("Error: ",A);
@@ -125,7 +137,7 @@ init.
 	.min(SinkVols,MinSinkVol);
 	
 	if(MinSourceVol <=0 | MinSinkVol <=0) {
-		!stop("one or more of capcacities <= 0");
+		!stop("One or more of capacities <= 0");
 	}
 	
 
@@ -189,7 +201,7 @@ init.
 	-+person_classes([]);
 	?person_prefix(PCP);
 	?epsilon_factor(EpsFact);
-
+	
 	for(.member(pclass(PClass,NPC),PersonClasses)) {
 		!get_name(PCP,PClass,PClassAgent);
 		?pclass_path(PCAPath);
@@ -200,6 +212,13 @@ init.
 		.findall(PClassCost,
 			.member(pocost(PClass,_,PClassCost),POCosts) 
 			,PClassCosts);
+		if(.length(PClassCosts,PClassCostsNum) & PClassCostsNum \== NOClasses) {
+			.concat("Number of costs ",PClassCostsNum,
+				" for person class ",PClass,
+				" is not equal to number of object classes", NOClasses,
+				CostMessage); 
+			!stop(CostMessage);
+		}
 		.max(PClassCosts,MaxPClassCost);
 		Eps = MaxPClassCost / EpsFact;
 		.send(PClassAgent,tell,[
@@ -240,7 +259,8 @@ init.
 .
 
 @ljnbdgfd[atomic]
-+!addweight(Share)[source(Source)] <-
++!addweight(Share)[source(Source)] //: Share \== 0 
+<-
 	?weight(Weight);
 	.send(Source,tell,added);
 	-+weight(Weight+Share);
@@ -360,10 +380,12 @@ init.
 .
 
 +!finish <-
-	//!kill_object_classes; 
-	//!kill_person_classes;
+	if(not nokill) {
+		!kill_object_classes; 
+		!kill_person_classes;
+	}
 	!calculate_streams(Streams);
-	//!clear_all_data;
+	!clear_all_data;
 	
 	?parent(Parent);
 	.send(Parent,tell,transportation_streams(Streams));
