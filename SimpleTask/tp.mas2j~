@@ -1,0 +1,5 @@
+MAS tp {
+	infrastructure : Centralised
+	
+	agents: main /src/asl/util/tp/main;
+}
