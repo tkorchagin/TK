@@ -221,9 +221,12 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 			
 	.findall(profit(Util - Price,Flow,PClassAgent,OClass),
 			.member(price(Price,Flow,PClassAgent,OClass),Prices) 
-			& PClassAgent \== Name & util(OClass,Util)
+			& PClassAgent \== Name 
+			& util(OClass,Util)
 			,OtherProfitsUnsorted);		// equation (48) p.87 from ref.1
 	
+	//.print(unsorted_profits(OtherProfitsUnsorted));
+			
 	if(debug) {
 		+prices(step(Step),prices(Prices));
 		+myclassflows(step(Step),flows(MyClassFlows));
@@ -240,6 +243,7 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 
 		.sort(OtherProfitsUnsorted, OtherProfitsRev);		// - line changed
 		.reverse(OtherProfitsRev, OtherProfits);
+		//.print(profits(OtherProfits));
 		?get_multi_head(QuantityNotAssigned,OtherProfits,NewBidProfits);
 			//NewBidProfits is never empty
 			// determine m from bottom line on p.87
@@ -253,10 +257,10 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 			// flows that are not from first m flows - first line on p. 88 
 			// they are keps as is - no change
 		-+newflows(KeepAsIsFlows);
+		//.print(kaif(KeepAsIsFlows));
 
 			
-		.reverse(NewBidProfits,
-			[profit(HeadProfit,_,_,HeadOClass)|NewBidProfitsTail]);
+		NewBidProfits =	[profit(HeadProfit,_,_,HeadOClass)|NewBidProfitsTail];
 		// NewBidProfitsTail - these flows have to be increased according to second 
 		// equaition on p.88
 		
@@ -272,7 +276,7 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 			.findall(CurFlow,
 				.member(profit(_,CurFlow,_,CurOClass), OtherProfits) 
 				,CurFlows);		// second equation on p.88 from ref.1
-			//.print(c(CurOClass,CurFlows));
+			.print(c(CurOClass,CurFlows));
 			AddCurFlow = math.sum(CurFlows);
 			if(not 	.member(flow(CurOClassFlow,CurOClass),
 				MyClassFlows)) 
@@ -293,6 +297,7 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 		
 		// First, calculate number of non-zero flows for bids
 		?newflows(AllNewFlows);
+		//.print(anf(AllNewFlows));
 		.findall(OClass,.member(flow(Flow,OClass),AllNewFlows) & Flow > 0,
 			NonZeroFlowClasses);
 		.union([],NonZeroFlowClasses,NonZeroFlowClassesSet);
@@ -329,6 +334,7 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 			//.send(OCAgent,untell,bid(_,_,MyClass,_));
 			//!send(OCAgent,tell,bid(Bid,Flow,MyClass,Step));
 			
+			//.print(bid(Bid,Flow,OCAgent,Step));
 			!send(OCAgent,achieve,update_bid(Bid,Flow,Step));
 			if(debug) {
 							!print(o(step(Step),

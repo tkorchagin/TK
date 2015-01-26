@@ -8,8 +8,8 @@ freesend.
 weight(1).
 
 epsilon_factor(10).
-oclass_path("tp/object_class.asl").
-pclass_path("tp/person_class.asl").
+oclass_path("src/asl/util/tp/object_class.asl").
+pclass_path("src/asl/util/tp/person_class.asl").
 
 //////// Bertsekas algorithm
 
@@ -17,7 +17,7 @@ person_prefix("p").
 object_prefix("o").
 
 
-version("Version 4.2").
+version("Version 4.2.1").
 
 /*
 
@@ -26,6 +26,8 @@ Version 4.2 Debug: 	1) LocalMaxSteps corrected
 					3) Non-positove capacities are filtered 
 					4) Costs number is put under control
 					5) MyClass flows in pclass were not checked for empty list
+					
+Version 4.2.1 Debug: 	1) Double inversion of NewBidProfits eliminated					
 
 This routine implements solution of the 
 Trasportation Problem described at 

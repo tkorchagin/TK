@@ -131,6 +131,7 @@ nullate([[_,_,PClass] | Tail],
 
 +bid(ABid,AFlow,APersonClassAgent,APersonStep)
 	<-
+	//.print(bid(ABid,AFlow,APersonClassAgent,APersonStep));
 	!get_next_token(TokRec);
 	if(not bids_processed(TokRec-1)) {
 		if(debug) {
