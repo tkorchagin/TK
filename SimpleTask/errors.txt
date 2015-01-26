@@ -1,3 +1,34 @@
+source(id(t1),exceed(10)). sink(id(r1),need(100)). 
+source(id(t2),exceed(20)). sink(id(r2),need(100)).
+source(id(t3),exceed(2)). 
+source(id(t4),exceed(3)). 
+source(id(t5),exceed(12)). 
+
+crosscost(source(t1),sink(r1),cost(10)).
+crosscost(source(t1),sink(r2),cost(40)).
+crosscost(source(t2),sink(r1),cost(20)).
+crosscost(source(t2),sink(r2),cost(10)).
+crosscost(source(t3),sink(r1),cost(10)).
+crosscost(source(t3),sink(r2),cost(3)).
+crosscost(source(t4),sink(r1),cost(20)).
+crosscost(source(t4),sink(r2),cost(1)).
+crosscost(source(t5),sink(r1),cost(15)).
+crosscost(source(t5),sink(r2),cost(3)).
+
+Output:
+[tp] Transportation task solver initiated. Version 4.2
+[main] Total utility: 762
+[main] Total cost: 345
+[main] Total steps: 7
+[tp] run_no(1)
+[main] Assign from source t2 to sink r2 total of 20 resources
+[main] Assign from source t3 to sink r2 total of 2 resources
+[main] Assign from source t4 to sink r2 total of 3 resources
+[main] Assign from source t5 to sink r2 total of 12 resources
+[main] Assign from source t1 to sink r1 total of 10 resources
+[main] calculation time: 0.682 s
+----------
+
 source(id(t1),exceed(12)). sink(id(r1),need(13)). 
 source(id(t2),exceed(12)). sink(id(r2),need(15)).
 source(id(t3),exceed(100)). 
