@@ -27,27 +27,27 @@ npersons(N) :- dimension(N).
 
 Inputs:
 
-I. source(id(Id),exceed(Capacity)) -
-	supplier of (any) resource units 
-	1. Id - any unique (among sources) atom | numeric identifier
-	2. Capacity  - Integer number of units available at the source
+I. person(id(Id),exceed(Capacity)) -
+	supplier of (any) reperson units 
+	1. Id - any unique (among persons) atom | numeric identifier
+	2. Capacity  - Integer number of units available at the person
 
-II. sink(id(Id),need(Capacity)) -
-	consumer of resource units
-	1. Id - any unique (among sinks) atom | numeric identifier
-	2. Capacity - Integer number of units wanted at the sink
+II. object(id(Id),need(Capacity)) -
+	consumer of reperson units
+	1. Id - any unique (among objects) atom | numeric identifier
+	2. Capacity - Integer number of units wanted at the object
 	
-III. crosscost(source(SourceId),sink(SinkId),cost(Cost)) - 
-	Cost (any real) of transportation of one unit from source 
-	SourceId to sink SinkId
+III. crosscost(person(SourceId),object(ObjectId),cost(Cost)) - 
+	Cost (any real) of transportation of one unit from person 
+	SourceId to object ObjectId
 
 Outputs:
 
 I. 	transportation_streams([A1,A2,...]) - 
 		list of records of the form 
-		Ai = stream(source(SourceId),sink(SinkId),quantity(Q)),
-		where Q - is nonnegative quantity of item flow from source SourceID
-		to sink SinkId.
+		Ai = stream(person(SourceId),object(ObjectId),quantity(Q)),
+		where Q - is nonnegative quantity of item flow from person SourceID
+		to object ObjectId.
 
 II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		auxiliiary (debug) info about calculation
@@ -55,7 +55,7 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 
 
 @sdljnfksrjnf[atomic]
-+epsilon_factor(EF)[source(A)] : A \== self <-
++epsilon_factor(EF)[person(A)] : A \== self <-
 	.abolish(epsilon_factor(_));
 	+epsilon_factor(EF);
 .	
@@ -63,8 +63,8 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 
 +!check_start <-	
 
-	!check(.count(source(_,_),Nsources) & nsources(Nsources));
-	!check(.count(sink(_,_),Nsinks) & nsinks(Nsinks));
+	!check(.count(person(_,_),Npersons) & npersons(Npersons));
+	!check(.count(object(_,_),Nobjects) & nobjects(Nobjects));
 	!check(.count(crosscost(_,_,_),Ncosts) & ncosts(Ncosts));
 .
 
@@ -73,34 +73,34 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 
 	!check_start;	
 
-	.findall(N,sink(_,need(N)),SinkVols);
-	.findall(N,source(_,exceed(N)),SourceVols);
+	.findall(N,object(_,need(N)),ObjectVols);
+	.findall(N,person(_,exceed(N)),SourceVols);
 
-	TotSinks = math.sum(SinkVols);
-	.length(SinkVols,Nsinks);
-	-+nsinks(Nsinks);
+	TotObjects = math.sum(ObjectVols);
+	.length(ObjectVols,Nobjects);
+	-+nobjects(Nobjects);
 	TotSources = math.sum(SourceVols);
-	.length(SourceVols,Nsources);
-	-+nsources(Nsources);
+	.length(SourceVols,Npersons);
+	-+npersons(Npersons);
 	
 	
-	if(TotSinks > TotSources) {
-		-+nobjects(TotSinks);
+	if(TotObjects > TotSources) {
+		-+nobjects(TotObjects);
 		-+npersons(TotSources);
 		-+direction(direct);
-		.findall(pclass(Id,N),source(id(Id),exceed(N)),PersonClasses);
-		.findall(oclass(Id,N),sink(id(Id),need(N)),ObjectClasses);
-		.findall(pocost(I,J,Cost), crosscost(source(I),sink(J),cost(Cost)),
+		.findall(pclass(Id,N),person(id(Id),exceed(N)),PersonClasses);
+		.findall(oclass(Id,N),object(id(Id),need(N)),ObjectClasses);
+		.findall(pocost(I,J,Cost), crosscost(person(I),object(J),cost(Cost)),
 				POCosts);
 		-+pclasses(PersonClasses);
 		-+oclasses(ObjectClasses);
 	} else {
 		-+nobjects(TotSources);
-		-+npersons(TotSinks);
+		-+npersons(TotObjects);
 		-+direction(reverse);
-		.findall(pclass(Id,N),sink(id(Id),need(N)),PersonClasses);
-		.findall(oclass(Id,N),source(id(Id),exceed(N)),ObjectClasses);
-		.findall(pocost(I,J,Cost), crosscost(source(J),sink(I),cost(Cost)),
+		.findall(pclass(Id,N),object(id(Id),need(N)),PersonClasses);
+		.findall(oclass(Id,N),person(id(Id),exceed(N)),ObjectClasses);
+		.findall(pocost(I,J,Cost), crosscost(person(J),object(I),cost(Cost)),
 				POCosts);
 		-+pclasses(PersonClasses);
 		-+oclasses(ObjectClasses);
@@ -205,7 +205,7 @@ objectClass(Object,OClass) :-
 
 
 @ljnbdgfd[atomic]
-+!addweight(Share)[source(Source)] <-
++!addweight(Share)[person(Source)] <-
 	?weight(Weight);
 	.send(Source,tell,added);
 	-+weight(Weight+Share);
@@ -241,9 +241,9 @@ objectClass(Object,OClass) :-
 		.length(Recip,N);
 		!sent_handle(N,Recip);		
 		for(.member(Agent,Recip)) {
-			!check(added[source(Agent)]);
+			!check(added[person(Agent)]);
 		}
-		.abolish(added[source(Agent)] & .member(Agent,Recip));
+		.abolish(added[person(Agent)] & .member(Agent,Recip));
 		.send(Recip,Mode,Message);
 		+freesend;
 .
@@ -253,7 +253,7 @@ objectClass(Object,OClass) :-
 		!check(freesend);
 		.abolish(freesend);
 		!sent_handle(1,Recip);
-		!wait(added[source(Recip)]);		
+		!wait(added[person(Recip)]);		
 		.send(Recip,Mode,Message);
 		+freesend;
 .
@@ -301,8 +301,8 @@ objectClass(Object,OClass) :-
 				}
 			}
 		}
-		.findall(stream(source(Source),sink(Sink),quantity(Quantity)),
-			assign_class(Source,Sink,Quantity),Streams);
+		.findall(stream(person(Source),object(Object),quantity(Quantity)),
+			assign_class(Source,Object,Quantity),Streams);
 		?parent(Parent);
 		.send(Parent,tell,transportation_streams(Streams));
 .				

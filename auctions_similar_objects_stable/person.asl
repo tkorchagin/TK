@@ -51,7 +51,7 @@ weight(0).
 	-+weight(0);
 	?main(Main);
 	.send(Main,achieve,addweight(Weight));
-	!wait(added[source(Main)]); 
+	!wait(added[person(Main)]); 
 .	
 
 
@@ -59,7 +59,7 @@ weight(0).
 
 
 @ljnbdgfd[atomic]
-+!addweight(Share)[source(Source)] <-
++!addweight(Share)[person(Source)] <-
 	?weight(Weight);
 	-+weight(Weight+Share);
 	.send(Source,tell,added);
@@ -79,9 +79,9 @@ weight(0).
 		.send(Recip,tell,lock);
 		!sent_handle(N,Recip);		
 		for(.member(Agent,Recip)) {
-			!check(added[source(Agent)]);
+			!check(added[person(Agent)]);
 		}
-		.abolish(added[source(Agent)] & .member(Agent,Recip));
+		.abolish(added[person(Agent)] & .member(Agent,Recip));
 		.send(Recip,Mode,Message);
 		.send(Recip,untell,lock);
 		+freesend;
@@ -93,7 +93,7 @@ weight(0).
 		.abolish(freesend);
 		.send(Recip,tell,lock);
 		!sent_handle(1,Recip);		
-		!wait(added[source(Recip)]);
+		!wait(added[person(Recip)]);
 		.send(Recip,Mode,Message);
 		.send(Recip,untell,lock);
 		+freesend;
@@ -136,12 +136,12 @@ weight(0).
 	!getshare;
 	if(not prices_processed(TokRec-1)) {
 		if(debug) {
-			+token_fail_history(rec(TokRec),source(Object));
+			+token_fail_history(rec(TokRec),person(Object));
 		}
 	}
 	if(debug) {
 		?prices_processed(TokProc);
-		+token_history(proc(TokProc),rec(TokRec),source(Object));
+		+token_history(proc(TokProc),rec(TokRec),person(Object));
 	}
 	!check(prices_processed(TokRec-1)); 
 	!run(TokRec);
@@ -153,7 +153,7 @@ weight(0).
 	.send(Main,askOne,share_weight(Share),share_weight(Share));
 	.abolish(share_added);
 	!addweight(Share);
-	!wait(added[source(self)]);
+	!wait(added[person(self)]);
 .
 
 +!run(Id): not assigned  <-
@@ -211,9 +211,9 @@ weight(0).
 		if(debug) {
 			+send_bid(step(Step),BidObject,Bid);
 		}
-		!wait(bid_processed(Bid)[source(BidObject)]);
+		!wait(bid_processed(Bid)[person(BidObject)]);
 		if(not debug) {
-			-bid_processed(Bid)[source(BidObject)];
+			-bid_processed(Bid)[person(BidObject)];
 		}
 		-+profit(Profit);
 		-+profitObject(BidObject);
@@ -231,7 +231,7 @@ weight(0).
 	}
 .
 
--assigned[source(Object)]<- 
+-assigned[person(Object)]<- 
 		!put_into_queue(Object);
 .
 
@@ -245,7 +245,7 @@ weight(0).
 .	
 
 
-+?actual_utility(Util,Cost,Steps) : assigned[source(Object)]
++?actual_utility(Util,Cost,Steps) : assigned[person(Object)]
 	<-	
 		?util(Object,Util);
 		?cost(Object,Cost);
