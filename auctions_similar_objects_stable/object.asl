@@ -64,7 +64,7 @@ bids_received(0).
 		-+weight(0);
 		?main(Main);
 		.send(Main,achieve,addweight(Weight));
-		!wait(added[person(Main)]); 
+		!wait(added[source(Main)]); 
 		!print(sleep);
 .	
 
@@ -73,7 +73,7 @@ bids_received(0).
 
 
 @ljnbdgfd[atomic]
-+!addweight(Share)[person(Source)] <-
++!addweight(Share)[source(Source)] <-
 	?weight(Weight);
 	-+weight(Weight+Share);
 	if(Source \== self) {
@@ -91,9 +91,9 @@ bids_received(0).
 		.length(Recip,N);
 		!sent_handle(N,Recip);		
 		for(.member(Agent,Recip)) {
-			!check(added[person(Agent)]);
+			!check(added[source(Agent)]);
 		}
-		.abolish(added[person(Agent)] & .member(Agent,Recip));
+		.abolish(added[source(Agent)] & .member(Agent,Recip));
 		.send(Recip,Mode,Message);
 		+freesend;
 .
@@ -104,7 +104,7 @@ bids_received(0).
 		!check(freesend);
 		.abolish(freesend);
 		!sent_handle(1,Recip);	
-		!wait(added[person(Recip)]);
+		!wait(added[source(Recip)]);
 		.send(Recip,Mode,Message);
 		+freesend;
 .
@@ -135,14 +135,14 @@ bids_received(0).
 	!get_next_token(TokRec);
 	if(not bids_processed(TokRec-1)) {
 		if(debug) {
-			+token_fail_history(rec(TokRec),person(APerson));
+			+token_fail_history(rec(TokRec),source(APerson));
 		}
 		!check(bids_processed(TokRec-1));
 	}
 	if(debug) {
 		?bids_processed(TokProc);
 		if(debug) {
-			+token_history(proc(TokProc),rec(TokRec),person(APerson));
+			+token_history(proc(TokProc),rec(TokRec),source(APerson));
 		}
 	}
 	

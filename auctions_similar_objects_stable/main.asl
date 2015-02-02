@@ -1,19 +1,23 @@
-object(id(r1),need(7)).
-object(id(r2),need(130)).
+sink(id(r1),need(7)).
+//sink(id(r2),need(130)).
 
-person(id(t1),exceed(6)).  
-person(id(t2),exceed(5)). 
-person(id(t3),exceed(10)).
-person(id(t4),exceed(12)). 
+source(id(t1),exceed(6)).  
+source(id(t2),exceed(5)). 
+//source(id(t3),exceed(10)).
+//source(id(t4),exceed(12)). 
 
-crosscost(person(t1),object(r1),cost(100)).
-crosscost(person(t1),object(r2),cost(2)).
-crosscost(person(t2),object(r1),cost(1)).
-crosscost(person(t2),object(r2),cost(10)).
-crosscost(person(t3),object(r1),cost(50)).
-crosscost(person(t3),object(r2),cost(30)).
-crosscost(person(t4),object(r1),cost(502)).
-crosscost(person(t4),object(r2),cost(1)).
+crosscost(source(t1),sink(r1),cost(100)).
+crosscost(source(t1),sink(r2),cost(2)).
+crosscost(source(t2),sink(r1),cost(1)).
+crosscost(source(t2),sink(r2),cost(10)).
+crosscost(source(t3),sink(r1),cost(50)).
+crosscost(source(t3),sink(r2),cost(30)).
+crosscost(source(t4),sink(r1),cost(502)).
+crosscost(source(t4),sink(r2),cost(1)).
+
+
+
+
 
 
 !start.
@@ -26,22 +30,22 @@ crosscost(person(t4),object(r2),cost(1)).
 +!start <-
 	.my_name(MyName);
 	.create_agent(tp,"transportation.asl");
-	.findall(person(id(Id),exceed(Cap)),
-			person(id(Id),exceed(Cap)),Sources);
-	.findall(object(id(Id),need(Cap)),
-			object(id(Id),need(Cap)),Objects);
-	.findall(crosscost(person(Id1),object(Id2),cost(Cost)),
-			crosscost(person(Id1),object(Id2),cost(Cost)),	
+	.findall(source(id(Id),exceed(Cap)),
+			source(id(Id),exceed(Cap)),Sources);
+	.findall(sink(id(Id),need(Cap)),
+			sink(id(Id),need(Cap)),Sinks);
+	.findall(crosscost(source(Id1),sink(Id2),cost(Cost)),
+			crosscost(source(Id1),sink(Id2),cost(Cost)),	
 			Costs);
-	.length(Sources,Npersons);
-	.length(Objects,Nobjects);
+	.length(Sources,Nsources);
+	.length(Sinks,Nsinks);
 	.length(Costs,Ncosts);
-	.send(tp,tell,[npersons(Npersons),
-		nobjects(Nobjects),
+	.send(tp,tell,[nsources(Nsources),
+		nsinks(Nsinks),
 		ncosts(Ncosts),
 		parent(MyName)]);
 	.send(tp,tell,Sources);
-	.send(tp,tell,Objects);
+	.send(tp,tell,Sinks);
 	.send(tp,tell,Costs);
 	.send(tp,tell,epsilon_factor(100));
 	.send(tp,achieve,start);
@@ -56,9 +60,9 @@ crosscost(person(t4),object(r2),cost(1)).
 
 +transportation_streams(Streams)
 	<-
-	for(.member(stream(person(Source),object(Object),quantity(Quantity)),
+	for(.member(stream(source(Source),sink(Sink),quantity(Quantity)),
 		Streams)) {
-		.puts("Assign from person #{Source} to object #{Object} total of #{Quantity} repersons");
+		.puts("Assign from source #{Source} to sink #{Sink} total of #{Quantity} resources");
 	}
 	.
 
