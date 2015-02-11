@@ -27,23 +27,28 @@ npersons(N) :- dimension(N).
 
 Inputs:
 
-I. source(id(Id),exceed(Capacity)) -
+I. team(id(Id)) -
 	supplier of (any) resource units 
 	1. Id - any unique (among sources) atom | numeric identifier
-	2. Capacity  - Integer number of units available at the source
-
-II. sink(id(Id),need(Capacity)) -
+II. part(id(Id),need(Capacity)) -
 	consumer of resource units
 	1. Id - any unique (among sinks) atom | numeric identifier
 	2. Capacity - Integer number of units wanted at the sink
-	
-III. crosscost(source(SourceId),sink(SinkId),cost(Cost)) - 
+III. team_part_cost(team  (TeeamId),sink(SinkId),cost(Cost)) - 
 	Cost (any real) of transportation of one unit from source 
 	SourceId to sink SinkId
 
 Outputs:
+I. 	parts([A1,A2,...]) - 
+		list of records of the form 
+		Ai = part (id(PartId),teams([id(T1),...])),
+II. totals(util(TotU),cost(TotC),steps(TotS)) -
+		auxiliiary (debug) info about calculation
 
-I. 	transportation_streams([A1,A2,...]) - 
+
+Outputs:
+
+I. 	parts([A1,A2,...]) - 
 		list of records of the form 
 		Ai = stream(source(SourceId),sink(SinkId),quantity(Q)),
 		where Q - is nonnegative quantity of item flow from source SourceID
@@ -55,7 +60,7 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 
 
 @sdljnfksrjnf[atomic]
-+epsilon_factor(EF)[source(A)] : A \== self <-
++epsilon_factor(EF)[team(A)] : A \== self <-
 	.abolish(epsilon_factor(_));
 	+epsilon_factor(EF);
 .	
@@ -63,9 +68,9 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 
 +!check_start <-	
 
-	!check(.count(source(_,_),Nsources) & nsources(Nsources));
-	!check(.count(sink(_,_),Nsinks) & nsinks(Nsinks));
-	!check(.count(crosscost(_,_,_),Ncosts) & ncosts(Ncosts));
+	!check(.count(team(_),Nsources) & nsources(Nsources));
+	!check(.count(part(_,_),Nsinks) & nsinks(Nsinks));
+	!check(.count(team_part_cost(_,_,_),Ncosts) & ncosts(Ncosts));
 .
 
 
@@ -73,8 +78,8 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 
 	!check_start;	
 
-	.findall(N,sink(_,need(N)),SinkVols);
-	.findall(N,source(_,exceed(N)),SourceVols);
+	.findall(N,part(_,need(N)),SinkVols);
+	.findall(N,team(_),SourceVols);
 
 	TotSinks = math.sum(SinkVols);
 	.length(SinkVols,Nsinks);
@@ -88,9 +93,9 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		-+nobjects(TotSinks);
 		-+npersons(TotSources);
 		-+direction(direct);
-		.findall(pclass(Id,N),source(id(Id),exceed(N)),PersonClasses);
-		.findall(oclass(Id,N),sink(id(Id),need(N)),ObjectClasses);
-		.findall(pocost(I,J,Cost), crosscost(source(I),sink(J),cost(Cost)),
+		.findall(pclass(Id,N),team(id(Id)),PersonClasses);
+		.findall(oclass(Id,N),part(id(Id),need(N)),ObjectClasses);
+		.findall(pocost(I,J,Cost), team_part_cost(team(I),part(J),cost(Cost)),
 				POCosts);
 		-+pclasses(PersonClasses);
 		-+oclasses(ObjectClasses);
@@ -98,9 +103,9 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		-+nobjects(TotSources);
 		-+npersons(TotSinks);
 		-+direction(reverse);
-		.findall(pclass(Id,N),sink(id(Id),need(N)),PersonClasses);
-		.findall(oclass(Id,N),source(id(Id),exceed(N)),ObjectClasses);
-		.findall(pocost(I,J,Cost), crosscost(source(J),sink(I),cost(Cost)),
+		.findall(pclass(Id,N),part(id(Id),need(N)),PersonClasses);
+		.findall(oclass(Id,N),team(id(Id)),ObjectClasses);
+		.findall(pocost(I,J,Cost), team_part_cost(team(J),part(I),cost(Cost)),
 				POCosts);
 		-+pclasses(PersonClasses);
 		-+oclasses(ObjectClasses);
@@ -205,7 +210,7 @@ objectClass(Object,OClass) :-
 
 
 @ljnbdgfd[atomic]
-+!addweight(Share)[source(Source)] <-
++!addweight(Share)[team(Source)] <-
 	?weight(Weight);
 	.send(Source,tell,added);
 	-+weight(Weight+Share);
@@ -241,9 +246,9 @@ objectClass(Object,OClass) :-
 		.length(Recip,N);
 		!sent_handle(N,Recip);		
 		for(.member(Agent,Recip)) {
-			!check(added[source(Agent)]);
+			!check(added[team(Agent)]);
 		}
-		.abolish(added[source(Agent)] & .member(Agent,Recip));
+		.abolish(added[team(Agent)] & .member(Agent,Recip));
 		.send(Recip,Mode,Message);
 		+freesend;
 .
@@ -253,7 +258,7 @@ objectClass(Object,OClass) :-
 		!check(freesend);
 		.abolish(freesend);
 		!sent_handle(1,Recip);
-		!wait(added[source(Recip)]);		
+		!wait(added[team(Recip)]);		
 		.send(Recip,Mode,Message);
 		+freesend;
 .
@@ -301,10 +306,10 @@ objectClass(Object,OClass) :-
 				}
 			}
 		}
-		.findall(stream(source(Source),sink(Sink),quantity(Quantity)),
+		.findall(stream(team(Source),part(Sink),quantity(Quantity)),
 			assign_class(Source,Sink,Quantity),Streams);
 		?parent(Parent);
-		.send(Parent,tell,transportation_streams(Streams));
+		.send(Parent,tell,parts(Streams));
 .				
 
 +!calc_output_classes.				

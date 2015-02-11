@@ -1,19 +1,19 @@
-sink(id(r1),need(7)).
-//sink(id(r2),need(130)).
+part(id(r1),need(7)).
+part(id(r2),need(130)).
 
-source(id(t1),exceed(6)).  
-source(id(t2),exceed(5)). 
-//source(id(t3),exceed(10)).
-//source(id(t4),exceed(12)). 
+team(id(t1)).  
+team(id(t2)). 
+team(id(t3)).
+team(id(t4)). 
 
-crosscost(source(t1),sink(r1),cost(100)).
-crosscost(source(t1),sink(r2),cost(2)).
-crosscost(source(t2),sink(r1),cost(1)).
-crosscost(source(t2),sink(r2),cost(10)).
-crosscost(source(t3),sink(r1),cost(50)).
-crosscost(source(t3),sink(r2),cost(30)).
-crosscost(source(t4),sink(r1),cost(502)).
-crosscost(source(t4),sink(r2),cost(1)).
+team_part_cost(team(t1),part(r1),cost(100)).
+team_part_cost(team(t1),part(r2),cost(2)).
+team_part_cost(team(t2),part(r1),cost(1)).
+team_part_cost(team(t2),part(r2),cost(10)).
+team_part_cost(team(t3),part(r1),cost(50)).
+team_part_cost(team(t3),part(r2),cost(30)).
+team_part_cost(team(t4),part(r1),cost(502)).
+team_part_cost(team(t4),part(r2),cost(1)).
 
 
 
@@ -30,12 +30,12 @@ crosscost(source(t4),sink(r2),cost(1)).
 +!start <-
 	.my_name(MyName);
 	.create_agent(tp,"transportation.asl");
-	.findall(source(id(Id),exceed(Cap)),
-			source(id(Id),exceed(Cap)),Sources);
-	.findall(sink(id(Id),need(Cap)),
-			sink(id(Id),need(Cap)),Sinks);
-	.findall(crosscost(source(Id1),sink(Id2),cost(Cost)),
-			crosscost(source(Id1),sink(Id2),cost(Cost)),	
+	.findall(team(id(Id)),
+			team(id(Id)),Sources);
+	.findall(part(id(Id),need(Cap)),
+			part(id(Id),need(Cap)),Sinks);
+	.findall(team_part_cost(team(Id1),part(Id2),cost(Cost)),
+			team_part_cost(team(Id1),part(Id2),cost(Cost)),	
 			Costs);
 	.length(Sources,Nsources);
 	.length(Sinks,Nsinks);
@@ -58,7 +58,7 @@ crosscost(source(t4),sink(r2),cost(1)).
 	.print("Total steps: ",TotS);
 .
 
-+transportation_streams(Streams)
++parts(Streams)
 	<-
 	for(.member(stream(source(Source),sink(Sink),quantity(Quantity)),
 		Streams)) {
