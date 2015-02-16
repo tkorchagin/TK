@@ -1,4 +1,4 @@
-part(id(r1),need(20)).
+part(id(r1),need(2)).
 part(id(r2),need(10)).
 
 team(id(t1)).  
@@ -55,11 +55,10 @@ team_part_cost(team(t4),part(r2),cost(1)).
 	.print("Total steps: ",TotS);
 .
 
-+parts(Streams)
++parts(Parts)
 	<-
-	for(.member(stream(source(Source),sink(Sink),quantity(Quantity)),
-		Streams)) {
-		.puts("Assign from source #{Source} to sink #{Sink} total of #{Quantity} resources");
+	for(.member(part(id(PartID),TeamsList), Parts)) {
+		.puts("To part #{PartID} assign teams: #{TeamsList}.");
 	}
 	.
 

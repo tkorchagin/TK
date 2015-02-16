@@ -44,7 +44,7 @@ III. team_part_cost(team  (TeeamId),sink(SinkId),cost(Cost)) -
 Outputs:
 I. 	parts([A1,A2,...]) - 
 		list of records of the form 
-		Ai = part (id(PartId),teams([id(T1),...])),
+		Ai = part(id(PartId),teams([id(T1),...])),
 II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		auxiliiary (debug) info about calculation
 
@@ -301,22 +301,28 @@ objectClass(Object,OClass) :-
 
 +!calc_output_classes 
 		<-
+		.print(calc_output_classes);
 		?pclasses(PersonClasses);
 		?oclasses(ObjectClasses);
-		for(.member(pclass(PClass,_),PersonClasses)) {
-			for(.member(oclass(OClass),ObjectClasses)) {
-				.count(assigned(PClass,OClass)[_],NPO);
-				if(direction(direct)) {
-					+assign_class(PClass,OClass,NPO);
-				} else {
-					+assign_class(OClass,PClass,NPO);
-				}
+		
+		for(.member(pclass(PersonID,ObjectID),PersonClasses)) {
+		.print(PersonID,ObjectID);
+			if (assign_list(ObjectID,_)){
+			.print(1);
+				?assign_list(ObjectID, AList);
+				.concat([PersonID], AList, NewList);
+				-+assign_list(ObjectID, NewList);
+			} else {
+			.print(2);
+				+assign_list(ObjectID, [PersonID]);
 			}
+			
 		}
-		.findall(stream(team(Source),part(Sink),quantity(Quantity)),
-			assign_class(Source,Sink,Quantity),Streams);
+		
+		.findall(part(id(PartID),TeamsList), assign_list(PartID,TeamsList),Parts);
+			
 		?parent(Parent);
-		.send(Parent,tell,parts(Streams));
+		.send(Parent,tell,parts(Parts));
 .				
 
 +!calc_output_classes.				
