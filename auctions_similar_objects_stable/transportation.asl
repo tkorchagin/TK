@@ -79,7 +79,7 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 	!check_start;	
 
 	.findall(N,part(_,need(N)),SinkVols);
-	.findall(N,team(_),SourceVols);
+	.findall(team(_),team(_),SourceVols);
 
 	TotSinks = math.sum(SinkVols);
 	.length(SinkVols,Nsinks);
@@ -94,7 +94,7 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		-+npersons(TotSources);
 		-+direction(direct);
 		.findall(pclass(Id,N),team(id(Id)),PersonClasses);
-		.findall(oclass(Id,N),part(id(Id),need(N)),ObjectClasses);
+		.findall(oclass(Id),part(id(Id),need(N)),ObjectClasses);
 		.findall(pocost(I,J,Cost), team_part_cost(team(I),part(J),cost(Cost)),
 				POCosts);
 		-+pclasses(PersonClasses);
@@ -104,7 +104,7 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		-+npersons(TotSinks);
 		-+direction(reverse);
 		.findall(pclass(Id,N),part(id(Id),need(N)),PersonClasses);
-		.findall(oclass(Id,N),team(id(Id)),ObjectClasses);
+		.findall(oclass(Id),team(id(Id)),ObjectClasses);
 		.findall(pocost(I,J,Cost), team_part_cost(team(J),part(I),cost(Cost)),
 				POCosts);
 		-+pclasses(PersonClasses);
@@ -119,18 +119,18 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 	?npersons(NP);
 	.my_name(MyName);
 
-	for(.member(oclass(OClass,NOC),ObjectClasses)) {
+	for(.member(oclass(OClass),ObjectClasses)) {
 		.concat(OCP,OClass,OP);
 		-+currClassObjects([]);
-		for(.range(J,1,NOC)) {
-			!get_name(OP,J,Object);
+		//for(.range(J,1,NOC)) {
+			!get_name(OP,1,Object);
 			.create_agent(Object,"object.asl");
 			.send(Object,tell,[npersons(NP),main(MyName),
 					myclass(OClass)]);
 			?currClassObjects(CCOList);			
 			.concat([Object],CCOList,NewCCOList);
 			-+currClassObjects(NewCCOList);			
-		}
+		//}
 		?currClassObjects(CCOList);
 		+objectsByClass(OClass,CCOList);
 		?objects(Olist);
@@ -161,16 +161,16 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 			.concat([Person],Plist,NewPlist);
 			-+persons(NewPlist);
 					
-			for(.member(oclass(OClass,NOC),ObjectClasses)) {
+			for(.member(oclass(OClass),ObjectClasses)) {
 				.concat(OCP,OClass,OP);
 				.member(pocost(PClass,OClass,Cost),POCosts);	// determining cost 
 				Util = MaxPClassCost - Cost + 1;
-				for(.range(J,1,NOC)) {
-					!get_name(OP,J,Object);
+				//for(.range(J,1,NOC)) {
+					!get_name(OP,1,Object);
 					.send(Person,tell,util(Object,Util));
 					.send(Person,tell,cost(Object,Cost));
 					.send(Object,tell,util(Person,Util));
-				}
+				//}
 			}
 		}
 	} 
@@ -297,7 +297,7 @@ objectClass(Object,OClass) :-
 		?pclasses(PersonClasses);
 		?oclasses(ObjectClasses);
 		for(.member(pclass(PClass,_),PersonClasses)) {
-			for(.member(oclass(OClass,_),ObjectClasses)) {
+			for(.member(oclass(OClass),ObjectClasses)) {
 				.count(assigned(PClass,OClass)[_],NPO);
 				if(direction(direct)) {
 					+assign_class(PClass,OClass,NPO);

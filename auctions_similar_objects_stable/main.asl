@@ -17,9 +17,6 @@ team_part_cost(team(t4),part(r2),cost(1)).
 
 
 
-
-
-
 !start.
 
 /*
