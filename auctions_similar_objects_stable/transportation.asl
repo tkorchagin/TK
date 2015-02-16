@@ -8,6 +8,9 @@ weight(1).
 
 epsilon_factor(10).
 
+fake_part_id(T098765T089067hsfkibvdhfi).
+infty(10000000).
+
 
 //////// Bertsekas algorithm
 
@@ -68,7 +71,7 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 
 +!check_start <-	
 
-	!check(.count(team(_),Nsources) & nsources(Nsources));
+	//!check(.count(team(_),Nsources) & nsources(Nsources));
 	!check(.count(part(_,_),Nsinks) & nsinks(Nsinks));
 	!check(.count(team_part_cost(_,_,_),Ncosts) & ncosts(Ncosts));
 .
@@ -78,38 +81,37 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 
 	!check_start;	
 
-	.findall(N,part(_,need(N)),SinkVols);
-	.findall(team(_),team(_),SourceVols);
+	.findall(N,part(_,need(N)),PartVols);
+	.count(team(_),TotTeams);
 
-	TotSinks = math.sum(SinkVols);
-	.length(SinkVols,Nsinks);
-	-+nsinks(Nsinks);
-	TotSources = math.sum(SourceVols);
-	.length(SourceVols,Nsources);
-	-+nsources(Nsources);
+	NObjects = math.sum(PartVols);
+	
+	-+nobjects(NObjects);
+	
+	if(NObjects < TotTeams) {
+		-+nobjects(TotTeams);
+		?fake_part_id(FakePartId);
+		?infty(Infty);
+		+part(id(FakePartId),need(TotTeams - NObjects +1));
+		for(team(id(TeamId))) {
+			+team_part_cost(team(TeamId),part(FakePartId),cost(Infty));
+		}
+	} 
 	
 	
-	if(TotSinks > TotSources) {
-		-+nobjects(TotSinks);
-		-+npersons(TotSources);
-		-+direction(direct);
-		.findall(pclass(Id,N),team(id(Id)),PersonClasses);
-		.findall(oclass(Id),part(id(Id),need(N)),ObjectClasses);
-		.findall(pocost(I,J,Cost), team_part_cost(team(I),part(J),cost(Cost)),
-				POCosts);
-		-+pclasses(PersonClasses);
-		-+oclasses(ObjectClasses);
-	} else {
-		-+nobjects(TotSources);
-		-+npersons(TotSinks);
-		-+direction(reverse);
-		.findall(pclass(Id,N),part(id(Id),need(N)),PersonClasses);
-		.findall(oclass(Id),team(id(Id)),ObjectClasses);
-		.findall(pocost(I,J,Cost), team_part_cost(team(J),part(I),cost(Cost)),
-				POCosts);
-		-+pclasses(PersonClasses);
-		-+oclasses(ObjectClasses);
-	}
+	-+npersons(TotTeams);
+	-+direction(direct);
+	.findall(pclass(Id,1),team(id(Id)),PersonClasses);
+	.findall(oclass(Id,N),part(id(Id),need(N)),ObjectClasses);
+	.findall(pocost(I,J,Cost), team_part_cost(team(I),part(J),cost(Cost)),
+			POCosts);
+	-+pclasses(PersonClasses);
+	-+oclasses(ObjectClasses);
+
+
+		
+		
+	
 	
 	+inwork;
 
@@ -119,24 +121,25 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 	?npersons(NP);
 	.my_name(MyName);
 
-	for(.member(oclass(OClass),ObjectClasses)) {
+	for(.member(oclass(OClass,NOC),ObjectClasses)) {
 		.concat(OCP,OClass,OP);
 		-+currClassObjects([]);
-		//for(.range(J,1,NOC)) {
-			!get_name(OP,1,Object);
+		for(.range(J,1,NOC)) {
+			!get_name(OP,J,Object);
 			.create_agent(Object,"object.asl");
 			.send(Object,tell,[npersons(NP),main(MyName),
 					myclass(OClass)]);
 			?currClassObjects(CCOList);			
 			.concat([Object],CCOList,NewCCOList);
 			-+currClassObjects(NewCCOList);			
-		//}
+		}
 		?currClassObjects(CCOList);
 		+objectsByClass(OClass,CCOList);
 		?objects(Olist);
 		.concat(CCOList,Olist,NewOlist);
 		-+objects(NewOlist);
 	}
+	
 	
 	+objects_created;
 
@@ -161,28 +164,29 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 			.concat([Person],Plist,NewPlist);
 			-+persons(NewPlist);
 					
-			for(.member(oclass(OClass),ObjectClasses)) {
+			for(.member(oclass(OClass,NOC),ObjectClasses)) {
 				.concat(OCP,OClass,OP);
 				.member(pocost(PClass,OClass,Cost),POCosts);	// determining cost 
 				Util = MaxPClassCost - Cost + 1;
-				//for(.range(J,1,NOC)) {
-					!get_name(OP,1,Object);
+				for(.range(J,1,NOC)) {
+					!get_name(OP,J,Object);
 					.send(Person,tell,util(Object,Util));
 					.send(Person,tell,cost(Object,Cost));
 					.send(Object,tell,util(Person,Util));
-				//}
+				}
 			}
 		}
 	} 
 	+persons_created;
 
-
+	//.print(1);
 	!check(finished_objects_round);
 	.abolish(finished_objects_round);
 	
 	!check(finished_persons_round);
 	.abolish(finished_persons_round);
 
+	//.print(2);
 	?persons(Persons);
 	?objects(Objects);
 	.send(Persons,achieve,set_objects(Objects));
@@ -190,8 +194,11 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 	.abolish(finished_persons_round);
 	.send(Objects,achieve,set_persons(Persons));
 	
+	//.print(3);
 	!check(finished_objects_round);
 	.abolish(finished_objects_round);
+	
+	//.print(4);
 		
 	!run;
 .
@@ -210,7 +217,7 @@ objectClass(Object,OClass) :-
 
 
 @ljnbdgfd[atomic]
-+!addweight(Share)[team(Source)] <-
++!addweight(Share)[source(Source)] <-
 	?weight(Weight);
 	.send(Source,tell,added);
 	-+weight(Weight+Share);
@@ -246,9 +253,9 @@ objectClass(Object,OClass) :-
 		.length(Recip,N);
 		!sent_handle(N,Recip);		
 		for(.member(Agent,Recip)) {
-			!check(added[team(Agent)]);
+			!check(added[source(Agent)]);
 		}
-		.abolish(added[team(Agent)] & .member(Agent,Recip));
+		.abolish(added[source(Agent)] & .member(Agent,Recip));
 		.send(Recip,Mode,Message);
 		+freesend;
 .

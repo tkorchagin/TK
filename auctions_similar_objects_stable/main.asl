@@ -1,5 +1,5 @@
-part(id(r1),need(7)).
-part(id(r2),need(130)).
+part(id(r1),need(20)).
+part(id(r2),need(10)).
 
 team(id(t1)).  
 team(id(t2)). 

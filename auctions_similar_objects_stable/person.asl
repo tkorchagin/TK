@@ -1,5 +1,5 @@
 //opdebug.
-//debug.
+adebug.
 
 freesend.
 freeadd.
