@@ -1,12 +1,12 @@
-part(id(r1),need(2)).
-part(id(r2),need(10)).
+part(id(r1),need(12)).
+part(id(r2),need(1)).
 
 team(id(t1)).  
 team(id(t2)). 
 team(id(t3)).
 team(id(t4)). 
 
-team_part_cost(team(t1),part(r1),cost(100)).
+team_part_cost(team(t1),part(r1),cost(650)).
 team_part_cost(team(t1),part(r2),cost(2)).
 team_part_cost(team(t2),part(r1),cost(1)).
 team_part_cost(team(t2),part(r2),cost(10)).
@@ -62,3 +62,9 @@ team_part_cost(team(t4),part(r2),cost(1)).
 	}
 	.
 
++streams(Streams)
+<-
+	for(.member(streams(OClass,PClass,NPO), streams(OClass,PClass,NPO), Streams)) {
+		.puts("Class #{OClass} pclass #{PClass} NPO #{NPO}");
+	}
+.

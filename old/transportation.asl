@@ -8,9 +8,6 @@ weight(1).
 
 epsilon_factor(10).
 
-fake_part_id(T098765T089067hsfkibvdhfi).
-infty(10000000).
-
 
 //////// Bertsekas algorithm
 
@@ -30,28 +27,23 @@ npersons(N) :- dimension(N).
 
 Inputs:
 
-I. team(id(Id)) -
+I. source(id(Id),exceed(Capacity)) -
 	supplier of (any) resource units 
 	1. Id - any unique (among sources) atom | numeric identifier
-II. part(id(Id),need(Capacity)) -
+	2. Capacity  - Integer number of units available at the source
+
+II. sink(id(Id),need(Capacity)) -
 	consumer of resource units
 	1. Id - any unique (among sinks) atom | numeric identifier
 	2. Capacity - Integer number of units wanted at the sink
-III. team_part_cost(team  (TeeamId),sink(SinkId),cost(Cost)) - 
+	
+III. crosscost(source(SourceId),sink(SinkId),cost(Cost)) - 
 	Cost (any real) of transportation of one unit from source 
 	SourceId to sink SinkId
 
 Outputs:
-I. 	parts([A1,A2,...]) - 
-		list of records of the form 
-		Ai = part(id(PartId),teams([id(T1),...])),
-II. totals(util(TotU),cost(TotC),steps(TotS)) -
-		auxiliiary (debug) info about calculation
 
-
-Outputs:
-
-I. 	parts([A1,A2,...]) - 
+I. 	transportation_streams([A1,A2,...]) - 
 		list of records of the form 
 		Ai = stream(source(SourceId),sink(SinkId),quantity(Q)),
 		where Q - is nonnegative quantity of item flow from source SourceID
@@ -63,7 +55,7 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 
 
 @sdljnfksrjnf[atomic]
-+epsilon_factor(EF)[team(A)] : A \== self <-
++epsilon_factor(EF)[source(A)] : A \== self <-
 	.abolish(epsilon_factor(_));
 	+epsilon_factor(EF);
 .	
@@ -71,9 +63,9 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 
 +!check_start <-	
 
-	//!check(.count(team(_),Nsources) & nsources(Nsources));
-	!check(.count(part(_,_),Nsinks) & nsinks(Nsinks));
-	!check(.count(team_part_cost(_,_,_),Ncosts) & ncosts(Ncosts));
+	!check(.count(source(_,_),Nsources) & nsources(Nsources));
+	!check(.count(sink(_,_),Nsinks) & nsinks(Nsinks));
+	!check(.count(crosscost(_,_,_),Ncosts) & ncosts(Ncosts));
 .
 
 
@@ -81,37 +73,38 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 
 	!check_start;	
 
-	.findall(N,part(_,need(N)),PartVols);
-	.count(team(_),TotTeams);
+	.findall(N,sink(_,need(N)),SinkVols);
+	.findall(N,source(_,exceed(N)),SourceVols);
 
-	NObjects = math.sum(PartVols);
-	
-	-+nobjects(NObjects);
-	
-	if(NObjects < TotTeams) {
-		-+nobjects(TotTeams);
-		?fake_part_id(FakePartId);
-		?infty(Infty);
-		+part(id(FakePartId),need(TotTeams - NObjects +1));
-		for(team(id(TeamId))) {
-			+team_part_cost(team(TeamId),part(FakePartId),cost(Infty));
-		}
-	} 
+	TotSinks = math.sum(SinkVols);
+	.length(SinkVols,Nsinks);
+	-+nsinks(Nsinks);
+	TotSources = math.sum(SourceVols);
+	.length(SourceVols,Nsources);
+	-+nsources(Nsources);
 	
 	
-	-+npersons(TotTeams);
-	-+direction(direct);
-	.findall(pclass(Id,1),team(id(Id)),PersonClasses);
-	.findall(oclass(Id,N),part(id(Id),need(N)),ObjectClasses);
-	.findall(pocost(I,J,Cost), team_part_cost(team(I),part(J),cost(Cost)),
-			POCosts);
-	-+pclasses(PersonClasses);
-	-+oclasses(ObjectClasses);
-
-
-		
-		
-	
+	if(TotSinks > TotSources) {
+		-+nobjects(TotSinks);
+		-+npersons(TotSources);
+		-+direction(direct);
+		.findall(pclass(Id,N),source(id(Id),exceed(N)),PersonClasses);
+		.findall(oclass(Id,N),sink(id(Id),need(N)),ObjectClasses);
+		.findall(pocost(I,J,Cost), crosscost(source(I),sink(J),cost(Cost)),
+				POCosts);
+		-+pclasses(PersonClasses);
+		-+oclasses(ObjectClasses);
+	} else {
+		-+nobjects(TotSources);
+		-+npersons(TotSinks);
+		-+direction(reverse);
+		.findall(pclass(Id,N),sink(id(Id),need(N)),PersonClasses);
+		.findall(oclass(Id,N),source(id(Id),exceed(N)),ObjectClasses);
+		.findall(pocost(I,J,Cost), crosscost(source(J),sink(I),cost(Cost)),
+				POCosts);
+		-+pclasses(PersonClasses);
+		-+oclasses(ObjectClasses);
+	}
 	
 	+inwork;
 
@@ -139,7 +132,6 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		.concat(CCOList,Olist,NewOlist);
 		-+objects(NewOlist);
 	}
-	
 	
 	+objects_created;
 
@@ -179,14 +171,13 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 	} 
 	+persons_created;
 
-	//.print(1);
+
 	!check(finished_objects_round);
 	.abolish(finished_objects_round);
 	
 	!check(finished_persons_round);
 	.abolish(finished_persons_round);
 
-	//.print(2);
 	?persons(Persons);
 	?objects(Objects);
 	.send(Persons,achieve,set_objects(Objects));
@@ -194,11 +185,8 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 	.abolish(finished_persons_round);
 	.send(Objects,achieve,set_persons(Persons));
 	
-	//.print(3);
 	!check(finished_objects_round);
 	.abolish(finished_objects_round);
-	
-	//.print(4);
 		
 	!run;
 .
@@ -265,7 +253,7 @@ objectClass(Object,OClass) :-
 		!check(freesend);
 		.abolish(freesend);
 		!sent_handle(1,Recip);
-		!wait(added[team(Recip)]);		
+		!wait(added[source(Recip)]);		
 		.send(Recip,Mode,Message);
 		+freesend;
 .
@@ -301,24 +289,10 @@ objectClass(Object,OClass) :-
 
 +!calc_output_classes 
 		<-
-		.print(calc_output_classes);
 		?pclasses(PersonClasses);
 		?oclasses(ObjectClasses);
-		
-		for(.member(pclass(PersonID,ObjectID),PersonClasses)) {
-		//.print(PersonID,ObjectID);
-			if (assign_list(ObjectID,_)){
-				?assign_list(ObjectID, AList);
-				.concat([PersonID], AList, NewList);
-				-+assign_list(ObjectID, NewList);
-			} else {
-				+assign_list(ObjectID, [PersonID]);
-			}
-			
-		}
-		
 		for(.member(pclass(PClass,_),PersonClasses)) {
-			for(.member(oclass(OClass),ObjectClasses)) {
+			for(.member(oclass(OClass,_),ObjectClasses)) {
 				.count(assigned(PClass,OClass)[_],NPO);
 				if(direction(direct)) {
 					+assign_class(PClass,OClass,NPO);
@@ -327,13 +301,10 @@ objectClass(Object,OClass) :-
 				}
 			}
 		}
-		
-		.findall(streams(OClass,PClass,NPO), streams(OClass,PClass,NPO), Streams);
-		.findall(part(id(PartID),TeamsList), assign_list(PartID,TeamsList),Parts);
-			
+		.findall(stream(source(Source),sink(Sink),quantity(Quantity)),
+			assign_class(Source,Sink,Quantity),Streams);
 		?parent(Parent);
-		.send(Parent,tell,parts(Parts));
-		.send(Parent,tell,streams(Streams));
+		.send(Parent,tell,transportation_streams(Streams));
 .				
 
 +!calc_output_classes.				
