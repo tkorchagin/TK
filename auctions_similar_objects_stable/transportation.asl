@@ -92,26 +92,21 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		-+nobjects(TotTeams);
 		?fake_part_id(FakePartId);
 		?infty(Infty);
-		+part(id(FakePartId),need(TotTeams - NObjects +1));
+		+part(id(FakePartId),need(TotTeams - NObjects + 1));
 		for(team(id(TeamId))) {
 			+team_part_cost(team(TeamId),part(FakePartId),cost(Infty));
 		}
-	} 
+	}
 	
 	
 	-+npersons(TotTeams);
 	-+direction(direct);
 	.findall(pclass(Id,1),team(id(Id)),PersonClasses);
 	.findall(oclass(Id,N),part(id(Id),need(N)),ObjectClasses);
-	.findall(pocost(I,J,Cost), team_part_cost(team(I),part(J),cost(Cost)),
-			POCosts);
+	.findall(pocost(I,J,Cost), 
+		team_part_cost(team(I),part(J),cost(Cost)), POCosts);
 	-+pclasses(PersonClasses);
 	-+oclasses(ObjectClasses);
-
-
-		
-		
-	
 	
 	+inwork;
 

@@ -90,8 +90,8 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		-+direction(direct);
 		.findall(pclass(Id,N),source(id(Id),exceed(N)),PersonClasses);
 		.findall(oclass(Id,N),sink(id(Id),need(N)),ObjectClasses);
-		.findall(pocost(I,J,Cost), crosscost(source(I),sink(J),cost(Cost)),
-				POCosts);
+		.findall(pocost(I,J,Cost), 
+			crosscost(source(I),sink(J),cost(Cost)),POCosts);
 		-+pclasses(PersonClasses);
 		-+oclasses(ObjectClasses);
 	} else {
