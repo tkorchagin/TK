@@ -328,7 +328,6 @@ objectClass(Object,OClass) :-
 			}
 		}
 		
-		.findall(streams(OClass,PClass,NPO), streams(OClass,PClass,NPO), Streams);
 		.findall(part(id(PartID),TeamsList), assign_list(PartID,TeamsList),Parts);
 			
 		?parent(Parent);

@@ -61,10 +61,3 @@ team_part_cost(team(t4),part(r2),cost(1)).
 		.puts("To part #{PartID} assign teams: #{TeamsList}.");
 	}
 	.
-
-+streams(Streams)
-<-
-	for(.member(streams(OClass,PClass,NPO), streams(OClass,PClass,NPO), Streams)) {
-		.puts("Class #{OClass} pclass #{PClass} NPO #{NPO}");
-	}
-.
