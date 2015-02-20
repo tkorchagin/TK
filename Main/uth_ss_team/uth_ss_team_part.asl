@@ -16,7 +16,6 @@ team_count(0).
 			!check(norm(part(No1), PartNorm));
 			+norm(PartNorm);
 			.send(Main, tell,init_done(No1,DirName));
-			
 .			
 
 

@@ -122,13 +122,10 @@ maxcycles(20*Nteams) :- nteams(Nteams).
 
 			if(in_work) {
 				+plusutil(fact,
-					tuple(-1, 
-						200 - WorkPercentage));
+					tuple(-1, 200 - WorkPercentage));
 				
 			} else {
-				+plusutil(fact,tuple(
-					 200 - WorkEndTime, 
-						200 - WorkPercentage));
+				+plusutil(fact,tuple(200 - WorkEndTime, 200 - WorkPercentage));
 			}
 			
 			+plusutil(add,
@@ -442,7 +439,7 @@ maxcycles(20*Nteams) :- nteams(Nteams).
 			.abolish(chance);						// no info about stations vacancy
 			!position(PartList,false).
 
-+!position : not freehours <- !print(position(nofreehours)); !finish_round.
++!position : not freehours <- !print(posiion(nofreehours)); !finish_round.
 			
 +!position(_,_): planned(_) <- 			
 				!print(planned);

@@ -11,8 +11,8 @@ max_repcycles(2).
 
 //@nidc8ee[atomic]
 +team_ready(_) : .count(team_ready(_),N) & nteams(N)
-				<-
-				+team_data_ready;
+<-
+	+team_data_ready;
 .
 
 
@@ -20,51 +20,51 @@ max_repcycles(2).
 //////////////////////////////////////////////////////////////////////////////////////////
 
 +!init  
-				<-
-				.my_name(Name);
-				-+name(Name);
-				
-				!check(main(Main));
-				.send(Main, askOne,debug_output);
+<-
+	.my_name(Name);
+	-+name(Name);
+	
+	!check(main(Main));
+	.send(Main, askOne,debug_output);
 
-			
-				?night_start(StartNight);
-				+night_interval(StartNight, (StartNight + 5) mod 24);
-				
-				+util(tuple(-10000,-10000));
+
+	?night_start(StartNight);
+	+night_interval(StartNight, (StartNight + 5) mod 24);
+	
+	+util(tuple(-10000,-10000));
 .
 
 
 +!run <-
-				?id(Id);
-				if(not (ndirections(0) | nteams(0))) {
-					.print("Start processing data...");
-					!process_data;
-					.print("Finished processing");
-					
-					.abolish(plan_ready(_));
-					for(.member(I,[1,2,3,4,5,6,7,8])) {
-						-+interval(I);
-						-+rep_cycles(0);
-						-+util(-100000);
-						-+run;
-						!iterate;
-					};
-					
-					// DO Scalar:
-					.findall(A1*10000 + B1,util(_,tuple(A1,B1)),UtilList);
-					.print(UtilList);
-					Util = math.sum(UtilList);
-					-+util(Util);
-					// Dode ^^
-					
-					.print("Finished"); 
-				} else {
-					.puts("Plnannig will not be done for depot # #{Id} due to lack of direction or teams data");
-				};	
-				!check(main(Main));
-				
-				.send(Main,tell,depot_finished(Id));						
+	?id(Id);
+	if(not (ndirections(0) | nteams(0))) {
+		.print("Start processing data...");
+		!process_data;
+		.print("Finished processing");
+		
+		.abolish(plan_ready(_));
+		for(.member(I,[1,2,3,4,5,6,7,8])) {
+			-+interval(I);
+			-+rep_cycles(0);
+			-+util(-100000);
+			-+run;
+			!iterate;
+		};
+		
+		// DO Scalar:
+		.findall(A1*10000 + B1,util(_,tuple(A1,B1)),UtilList);
+		.print(UtilList);
+		Util = math.sum(UtilList);
+		-+util(Util);
+		// Dode ^^
+		
+		.print("Finished"); 
+	} else {
+		.puts("Plnannig will not be done for depot # #{Id} due to lack of direction or teams data");
+	};	
+	!check(main(Main));
+	
+	.send(Main,tell,depot_finished(Id));						
 .
 
 
