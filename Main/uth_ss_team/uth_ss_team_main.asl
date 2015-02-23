@@ -14,16 +14,18 @@ debug_date(date(2015,1,9)).
 direction_prefix("uth_ss_team_z_direction_").
 direction_path("./uth_ss_team/uth_ss_team_direction.asl").
 part_path("./uth_ss_team/uth_ss_team_part.asl").
+
 depot_prefix("uth_ss_team_z_depot_").
 depot_path("./uth_ss_team/uth_ss_team_depot.asl").
+
 team_prefix("uth_ss_team_z_team_").
 team_path("./uth_ss_team/uth_ss_team_team.asl").
 
 stations([]).
 
-+current_id(CurrentTime, N) <- +start.
-
-+start <- !execute. 
++current_id(CurrentTime, N) <-
+	!execute;
+.
 
 +!execute
 <-
