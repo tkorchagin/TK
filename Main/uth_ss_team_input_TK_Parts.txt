@@ -1,7 +1,8 @@
 +byParts
 +start_plan_hour(18)
 +part_direction_norm(direction(2001939893),depot(2000036956), part_norms([[1,2],[2,2],[3,2],[4,2],[5,0],[6,1],[7,2],[8,0]]))
-+part_direction_norm(direction(2001939894),depot(2000036956), part_norms([[1,10],[2,11],[3,2],[4,10],[5,6],[6,8],[7,2],[8,14]]))
++part_direction_norm(direction(2001939889),depot(2000036956), part_norms([[1,2],[2,2],[3,2],[4,2],[5,0],[6,1],[7,2],[8,0]]))
++part_direction_norm(direction(2001939943),depot(2000036956), part_norms([[1,2],[2,2],[3,2],[4,2],[5,0],[6,1],[7,2],[8,0]]))
 +depot(id(2000035162),night_start(6))
 +depot(id(2000036018),night_start(6))
 +depot(id(2000036604),night_start(6))
