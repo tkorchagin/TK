@@ -96,14 +96,17 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 	.my_name(MyName);
 
 	for(.member(oclass(OClass,NOC),ObjectClasses)) {
+		.print(oclass(OClass,NOC));
+		
 		.concat(OCP,OClass,OP);
 		-+currClassObjects([]);
-		for(.range(J,1,NOC)) {
-			!get_name(OP,J,Object);
+		for(.range(K,1,NOC)) {
+			.print("OClass: ", OClass);
+			
+			!get_name(OP,K,Object);
 			?object_path(ObjectPath);
 			.create_agent(Object,ObjectPath);
-			.send(Object,tell,[npersons(NP),main(MyName),
-					myclass(OClass)]);
+			.send(Object,tell,[npersons(NP),main(MyName), myclass(OClass)]);
 			?currClassObjects(CCOList);			
 			.concat([Object],CCOList,NewCCOList);
 			-+currClassObjects(NewCCOList);			
@@ -143,8 +146,8 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 				.member(pocost(PClass,OClass,Cost),POCosts);	// determining cost 
 				Util = MaxPClassCost - Cost + 1;
 				.print(NOC);
-				for(.range(J,1,NOC)) {
-					!get_name(OP,J,Object);
+				for(.range(Q,1,NOC)) {
+					!get_name(OP,Q,Object);
 					.send(Person,tell,util(Object,Util));
 					.send(Person,tell,cost(Object,Cost));
 					.send(Object,tell,util(Person,Util));
