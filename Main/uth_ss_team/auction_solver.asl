@@ -10,7 +10,7 @@ weight(1).
 
 epsilon_factor(10).
 
-fake_part_id(T098765T089067hsfkibvdhfi).
+fake_part_id(a098765T089067hsfkibvdhfi).
 infty(10000000).
 
 
@@ -52,7 +52,8 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 	
 
 +!check_start <-	
-	!check(.count(part(_,_),Nsinks) & nsinks(Nsinks));
+	!check(.count(team(_),Nteams) & nteams(Nteams));
+	!check(.count(part(_,_),Nsinks) & nparts(Nsinks));
 	!check(.count(team_part_cost(_,_,_),Ncosts) & ncosts(Ncosts));
 .
 

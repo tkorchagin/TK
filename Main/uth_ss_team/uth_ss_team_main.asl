@@ -5,6 +5,7 @@
 //debug_output.
 
 solver_path("uth_ss_team/auction_solver.asl").
+solver_name(auction_so_tap_solver).
 
 min_rest(16).
 
@@ -131,7 +132,7 @@ stations([]).
 
 +!get_p_name(DirID, PartNumber, PartID)
 <-
-	.concat(p, DirID, "_", PartNumber, PartIDSTR);
+	.concat(dir, DirID, "_", PartNumber, PartIDSTR);
 	.term2string(PartID, PartIDSTR);
 .
 
@@ -140,26 +141,27 @@ stations([]).
 	.print(solve_problem);
 	.my_name(MyName);
 	?solver_path(SolverPath);
-	.create_agent(tp,SolverPath);
-	.findall(team(id(Id)), team(id(Id)),Sources);
-	.findall(part(id(Id),need(Cap)), part(id(Id),need(Cap)),Sinks);
+	?solver_name(SolverName);
+	.create_agent(SolverName,SolverPath);
+	.findall(team(id(Id)), team(id(Id)),Teams);
+	.findall(part(id(Id),need(Cap)), part(id(Id),need(Cap)),Parts);
 	.findall(team_part_cost(team(Id1),part(Id2),cost(Cost)),
 			team_part_cost(team(Id1),part(Id2),cost(Cost)), Costs);
-	.length(Sources,Nsources);
-	.length(Sinks,Nsinks);
+	.length(Teams,Nteams);
+	.length(Parts,Nparts);
 	.length(Costs,Ncosts);
 	
-	.print(Sinks);
+	.print(Teams);
 	
-	.send(tp,tell,[nsources(Nsources),
-		nsinks(Nsinks),
+	.send(SolverName,tell,[nteams(Nteams),
+		nparts(Nparts),
 		ncosts(Ncosts),
 		parent(MyName)]);
-	.send(tp,tell,Sources);
-	.send(tp,tell,Sinks);
-	.send(tp,tell,Costs);
-	.send(tp,tell,epsilon_factor(100));
-	.send(tp,achieve,start);
+	.send(SolverName,tell,Teams);
+	.send(SolverName,tell,Parts);
+	.send(SolverName,tell,Costs);
+	.send(SolverName,tell,epsilon_factor(100));
+	.send(SolverName,achieve,start);
 .	
 
 +totals(util(TotU),cost(TotC),steps(TotS)) 
