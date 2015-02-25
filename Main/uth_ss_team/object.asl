@@ -17,16 +17,12 @@ bids_processed(0).
 bids_received(0).
 
 
-
-
 //@wsrlbfjw[atomic]
 +util(Person,Util) : npersons(N) & .count(util(_,_),N)
 		<-
 		!check(main(Main));
 		.send(Main,tell,object_end);
 .
-
-
 
 
 +!set_util(Person,Util) <-
@@ -42,7 +38,8 @@ bids_received(0).
 
 +!update_price(NewPrice) <-
 	?persons(Persons);
-	.my_name(Me);
+	.my_name(Me);.print(hey);
+	.wait(100000);
 	?myclass(MyClass);
 	if(price(Price)) {
 		.send(Persons,untell,price(Price,Me,MyClass));
@@ -67,9 +64,6 @@ bids_received(0).
 		!wait(added[source(Main)]); 
 		!print(sleep);
 .	
-
-
-
 
 
 @ljnbdgfd[atomic]
@@ -193,7 +187,6 @@ bids_received(0).
 .	
 
 
-
 @sdfdsf[atomic]
 +!iterate_step 
 	<-
@@ -215,8 +208,6 @@ bids_received(0).
 
 
 +!output <-
-	//.findall(Person,assigned(Person),Persons);
-	//.print(assigned(Persons));
 	if(assigned(Person)) {
 		?main(Main);
 		.send(Person,askOne,myclass(PClass),myclass(PClass));

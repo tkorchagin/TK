@@ -10,8 +10,6 @@ check_timeout(5000).
 prices_processed(0).
 prices_received(0).
 
-
-
 step(0).
 localmaxstep(10).
 
@@ -40,13 +38,11 @@ weight(0).
 	!check(main(Main));
 	.send(Main,tell,person_end);
 .
-	
-
-
 
 
 @sdfklnvdfls[atomic]
-+!sleep <-
++!sleep
+<-
 	?weight(Weight);
 	-+weight(0);
 	?main(Main);
@@ -55,11 +51,9 @@ weight(0).
 .	
 
 
-
-
-
 @ljnbdgfd[atomic]
-+!addweight(Share)[source(Source)] <-
++!addweight(Share)[source(Source)]
+<-
 	?weight(Weight);
 	-+weight(Weight+Share);
 	.send(Source,tell,added);
@@ -68,7 +62,6 @@ weight(0).
 	}
 	!print(weight(Weight+Share));
 .	
-
 
 
 +!send(Recip,Mode,Message) : .list(Recip)
@@ -99,8 +92,6 @@ weight(0).
 		+freesend;
 .
 
-
-
 		
 @esdfdsswnefs90[atomic]
 +!sent_handle(N,Recip) <- 
@@ -110,8 +101,6 @@ weight(0).
 		.send(Recip,achieve,addweight(Share));	// share the weight with recipients
 		!addweight(-N*Share);
 .
-
-
 
 
 +!start <- 
@@ -145,7 +134,7 @@ weight(0).
 	}
 	!check(prices_processed(TokRec-1)); 
 	!run(TokRec);
-	-+prices_processed(TokRec);			// release
+	-+prices_processed(TokRec);	// release
 .
 	
 +!getshare <-

@@ -94,19 +94,19 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 	?object_prefix(OCP);
 	?npersons(NP);
 	.my_name(MyName);
-
+	
+	.print(ObjectClasses);
 	for(.member(oclass(OClass,NOC),ObjectClasses)) {
 		.print(oclass(OClass,NOC));
 		
 		.concat(OCP,OClass,OP);
 		-+currClassObjects([]);
 		for(.range(K,1,NOC)) {
-			.print("OClass: ", OClass);
-			
 			!get_name(OP,K,Object);
 			?object_path(ObjectPath);
 			.create_agent(Object,ObjectPath);
-			.send(Object,tell,[npersons(NP),main(MyName), myclass(OClass)]);
+			.print(send(Object,tell,[npersons(NP), main(MyName), myclass(OClass)]));
+			.send(Object,tell,[npersons(NP), main(MyName), myclass(OClass)]);
 			?currClassObjects(CCOList);			
 			.concat([Object],CCOList,NewCCOList);
 			-+currClassObjects(NewCCOList);			
@@ -140,12 +140,14 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 			?persons(Plist);
 			.concat([Person],Plist,NewPlist);
 			-+persons(NewPlist);
+			
+			.print(ObjectClasses);
 					
 			for(.member(oclass(OClass,NOC),ObjectClasses)) {
+				.print(hheeeeeee, OClass);
 				.concat(OCP,OClass,OP);
 				.member(pocost(PClass,OClass,Cost),POCosts);	// determining cost 
 				Util = MaxPClassCost - Cost + 1;
-				.print(NOC);
 				for(.range(Q,1,NOC)) {
 					!get_name(OP,Q,Object);
 					.send(Person,tell,util(Object,Util));
@@ -154,10 +156,10 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 				}
 			}
 		}
-	} 
+	}
+	
 	+persons_created;
 
-	//.print(1);
 	!check(finished_objects_round);
 	.abolish(finished_objects_round);
 	

@@ -50,7 +50,6 @@ stations([]).
 
 	.print("Start Solving...");
 	!solve_problem;
-	.print("Finished Solving!");	
 .
 
 
@@ -98,9 +97,9 @@ stations([]).
 	
 	for(.member(part(DirID,PartNorms),PartInfoList)){
 		for(.member([PartNumber, PartNorm], PartNorms)){
-			.concat(DirID, "_", PartNumber, PartID);
-			.print(PartID);
+			!get_p_name(DirID, PartNumber, PartID);
 			+part(id(PartID), need(PartNorm));
+			.print(part(id(PartID), need(PartNorm)));
 		}
 	}
 	
@@ -110,12 +109,12 @@ stations([]).
 				part_direction_norm(direction(DirID), _, _), TeamList);
 	for (.member(TeamID,TeamList)){
 		?team(id(TeamID), _, Mode, State);
-		.print("TeamID:", TeamID);
 		+team(id(TeamID));
+		.print(team(id(TeamID)));
 		
 		for(.member(part(DirID,PartNorms),PartInfoList)){
 			for(.member([PartNumber, PartNorm], PartNorms)){
-				.concat(DirID, "_", PartNumber, PartID);
+				!get_p_name(DirID, PartNumber, PartID);
 				!count_cost(
 					PartNumber,
 					Mode,
@@ -123,29 +122,35 @@ stations([]).
 					TeamCost
 				);
 				+team_part_cost(team(TeamID),part(PartID),cost(TeamCost));
+				.print(team_part_cost(team(TeamID),part(PartID),cost(TeamCost)));
 			}
 		}
 		
 	}
 .
 
-+!solve_problem <-
++!get_p_name(DirID, PartNumber, PartID)
+<-
+	.concat(p, DirID, "_", PartNumber, PartIDSTR);
+	.term2string(PartID, PartIDSTR);
+.
+
++!solve_problem
+<-
 	.print(solve_problem);
-	//.wait(100000);
-	
 	.my_name(MyName);
 	?solver_path(SolverPath);
 	.create_agent(tp,SolverPath);
-	.findall(team(id(Id)),
-			team(id(Id)),Sources);
-	.findall(part(id(Id),need(Cap)),
-			part(id(Id),need(Cap)),Sinks);
+	.findall(team(id(Id)), team(id(Id)),Sources);
+	.findall(part(id(Id),need(Cap)), part(id(Id),need(Cap)),Sinks);
 	.findall(team_part_cost(team(Id1),part(Id2),cost(Cost)),
-			team_part_cost(team(Id1),part(Id2),cost(Cost)),	
-			Costs);
+			team_part_cost(team(Id1),part(Id2),cost(Cost)), Costs);
 	.length(Sources,Nsources);
 	.length(Sinks,Nsinks);
 	.length(Costs,Ncosts);
+	
+	.print(Sinks);
+	
 	.send(tp,tell,[nsources(Nsources),
 		nsinks(Nsinks),
 		ncosts(Ncosts),
@@ -234,13 +239,15 @@ stations([]).
 	!check(A);
 .	
 
-+!tell(A) <-
-			.print(tell(A));
-			tell(A);
++!tell(A)
+<-
+	.print(tell(A));
+	tell(A);
 .
 
 +parts(Parts)
 <-
+	.print("Finished Solving!");
 	!finish;
 	for(.member(part(id(PartID),TeamsList), Parts)) {
 		.puts("To part #{PartID} assign teams: #{TeamsList}.");
