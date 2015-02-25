@@ -100,9 +100,11 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		.print(oclass(OClass,NOC));
 		
 		.concat(OCP,OClass,OP);
+		.print(op(OP));
 		-+currClassObjects([]);
 		for(.range(K,1,NOC)) {
 			!get_name(OP,K,Object);
+			.print(object(Object));
 			?object_path(ObjectPath);
 			.create_agent(Object,ObjectPath);
 			.send(Object,tell,[npersons(NP), main(MyName), myclass(OClass)]);
@@ -179,7 +181,7 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 .
 
 +!get_name(Prefix,I,Name) <-
-		.concat(Prefix,I,NameStr);
+		.concat(Prefix,"_",I,NameStr);
 		.term2string(Name,NameStr);
 .
 
@@ -272,40 +274,29 @@ objectClass(Object,OClass) :-
 		<-
 		!calc_output_classes;
 		!kill_objects; 
+		!kill_persons;
 .
 
 
 +!calc_output_classes 
 		<-
 		.print(calc_output_classes);
-		?pclasses(PersonClasses);
-		?oclasses(ObjectClasses);
+		.findall(assigned(TeamID,PartID), assigned(TeamID,PartID), AssignList);
+		.print(AssignList);
 		
-		for(.member(pclass(PersonID,ObjectID),PersonClasses)) {
-		//.print(PersonID,ObjectID);
-			if (assign_list(ObjectID,_)){
-				?assign_list(ObjectID, AList);
-				.concat([PersonID], AList, NewList);
-				-+assign_list(ObjectID, NewList);
+		for(.member(assigned(TeamID,PartID),AssignList)) {
+			if (assign_list(PartID,_)){
+				?assign_list(PartID, AList);
+				.concat([TeamID], AList, NewList);
+				-+assign_list(PartID, NewList);
 			} else {
-				+assign_list(ObjectID, [PersonID]);
-			}
-			
-		}
-		
-		for(.member(pclass(PClass,_),PersonClasses)) {
-			for(.member(oclass(OClass),ObjectClasses)) {
-				.count(assigned(PClass,OClass)[_],NPO);
-				if(direction(direct)) {
-					+assign_class(PClass,OClass,NPO);
-				} else {
-					+assign_class(OClass,PClass,NPO);
-				}
+				+assign_list(PartID, [TeamID]);
 			}
 		}
 		
-		.findall(part(id(PartID),TeamsList), assign_list(PartID,TeamsList),Parts);
-			
+		.findall(part(id(PartID),TeamsList),
+			assign_list(PartID,TeamsList),Parts);
+		
 		?parent(Parent);
 		.send(Parent,tell,parts(Parts));
 		.send(Parent,tell,streams(Streams));
@@ -378,7 +369,6 @@ objectClass(Object,OClass) :-
 	?totSteps(TotS);
 	.send(Parent,tell,totals(util(TotU),cost(TotC),steps(TotS)));
 	+finished_persons_round;
-	!kill_persons;
 .
 
 +!check(A) : A.

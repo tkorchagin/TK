@@ -5,7 +5,7 @@ freesend.
 freeadd.
 inf(1000000).
 
-check_timeout(5000).
+check_timeout(200*N) :- nobjects(N).
 
 prices_processed(0).
 prices_received(0).
@@ -146,6 +146,7 @@ weight(0).
 .
 
 +!run(Id): not assigned  <-
+	.print(new_round(Id));
 	.my_name(Name);
 	?main(Main);
 	!check(price(_,_,_));

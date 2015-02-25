@@ -1,2 +1,10 @@
 *.asl~
 *.asl#
+*.log
+*.1
+*.lck
+*.log
+*.zip
+Main.zip
+
+Main/mas.log

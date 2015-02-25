@@ -106,9 +106,10 @@ stations([]).
 	
 	.print("findall started...");
 	.findall(TeamID, 
-		team(id(TeamID), _, Mode, State) &
-			team_allowed(team(TeamID),direction(DirID)) &
-				part_direction_norm(direction(DirID), _, _), TeamList);
+		part_direction_norm(direction(DirID), _, _)
+		 & team_allowed(team(TeamID),direction(DirID)) 
+		 & team(id(TeamID), _, Mode, State) 
+				, TeamList);
 	
 	.print("findall finished");
 	
@@ -127,7 +128,6 @@ stations([]).
 					TeamCost
 				);
 				+team_part_cost(team(TeamID),part(PartID),cost(TeamCost));
-				.print(team_part_cost(team(TeamID),part(PartID),cost(TeamCost)));
 			}
 		}
 		
@@ -253,9 +253,8 @@ stations([]).
 
 +parts(Parts)
 <-
-	.print("Finished Solving!");
 	!finish;
 	for(.member(part(id(PartID),TeamsList), Parts)) {
-		.puts("To part #{PartID} assign teams: #{TeamsList}.");
+		.puts("To part '#{PartID}' assign teams: #{TeamsList}.");
 	}
 .
