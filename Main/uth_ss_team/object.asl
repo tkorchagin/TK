@@ -38,8 +38,7 @@ bids_received(0).
 
 +!update_price(NewPrice) <-
 	?persons(Persons);
-	.my_name(Me);.print(hey);
-	.wait(100000);
+	.my_name(Me);
 	?myclass(MyClass);
 	if(price(Price)) {
 		.send(Persons,untell,price(Price,Me,MyClass));

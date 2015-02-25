@@ -10,7 +10,7 @@ weight(1).
 
 epsilon_factor(10).
 
-fake_part_id(a098765T089067hsfkibvdhfi).
+fake_part_id(fake_part_a098765T089067hsfkibvdhfi).
 infty(10000000).
 
 
@@ -96,7 +96,6 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 	?npersons(NP);
 	.my_name(MyName);
 	
-	.print(ObjectClasses);
 	for(.member(oclass(OClass,NOC),ObjectClasses)) {
 		.print(oclass(OClass,NOC));
 		
@@ -106,7 +105,6 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 			!get_name(OP,K,Object);
 			?object_path(ObjectPath);
 			.create_agent(Object,ObjectPath);
-			.print(send(Object,tell,[npersons(NP), main(MyName), myclass(OClass)]));
 			.send(Object,tell,[npersons(NP), main(MyName), myclass(OClass)]);
 			?currClassObjects(CCOList);			
 			.concat([Object],CCOList,NewCCOList);
@@ -135,6 +133,9 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 			!get_name(PP,I,Person);
 			?person_path(PersonPath);
 			.create_agent(Person,PersonPath);
+			
+			.print(create_agent(Person,PersonPath));
+			
 			.send(Person,tell,[nobjects(NO),main(MyName),
 					myclass(PClass),
 					epsilon(Eps)]);
@@ -142,10 +143,7 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 			.concat([Person],Plist,NewPlist);
 			-+persons(NewPlist);
 			
-			.print(ObjectClasses);
-					
 			for(.member(oclass(OClass,NOC),ObjectClasses)) {
-				.print(hheeeeeee, OClass);
 				.concat(OCP,OClass,OP);
 				.member(pocost(PClass,OClass,Cost),POCosts);	// determining cost 
 				Util = MaxPClassCost - Cost + 1;
@@ -246,7 +244,6 @@ objectClass(Object,OClass) :-
 		.send(Recip,Mode,Message);
 		+freesend;
 .
-
 
 
 @sadkljcn[atomic]

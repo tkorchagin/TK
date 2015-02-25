@@ -104,10 +104,14 @@ stations([]).
 		}
 	}
 	
+	.print("findall started...");
 	.findall(TeamID, 
 		team(id(TeamID), _, Mode, State) &
 			team_allowed(team(TeamID),direction(DirID)) &
 				part_direction_norm(direction(DirID), _, _), TeamList);
+	
+	.print("findall finished");
+	
 	for (.member(TeamID,TeamList)){
 		?team(id(TeamID), _, Mode, State);
 		+team(id(TeamID));
@@ -151,7 +155,7 @@ stations([]).
 	.length(Parts,Nparts);
 	.length(Costs,Ncosts);
 	
-	.print(Teams);
+	//.print(Teams);
 	
 	.send(SolverName,tell,[nteams(Nteams),
 		nparts(Nparts),
