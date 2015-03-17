@@ -6,6 +6,34 @@ const_add(100).
 
 min_rest(16).
 
+
+/*
+source(id(t1),exceed(1)). 
+source(id(t2),exceed(1)). 
+source(id(t3),exceed(1)).
+source(id(t4),exceed(1)).
+
+sink(id(r1),need(1)).
+sink(id(r2),need(1)).
+
+
+
+allowed_sources(sink(r1),sources([t1,t3,t4])). 
+allowed_sources(sink(r2),sources([t3,t4])).
+
+
+crosscost(source(t1),sink(r1),cost(650)).
+crosscost(source(t1),sink(r2),cost(2)).
+crosscost(source(t2),sink(r1),cost(1)).
+crosscost(source(t2),sink(r2),cost(10)).
+crosscost(source(t3),sink(r1),cost(50)).
+crosscost(source(t3),sink(r2),cost(30)).
+crosscost(source(t4),sink(r1),cost(502)).
+crosscost(source(t4),sink(r2),cost(1)).
+
+*/
+
+
 !start.
 
 
@@ -77,10 +105,46 @@ min_rest(16).
 		 & team(id(TeamID), _, Mode, State), TeamList);
 	.print("findall finished");
 	
-	.findall(team_allowed(_,_), team_allowed(_,_), AllowedTeams);
+	
+	
+	/*
+	.print("started: .findall(team_allowed(_,_), ...)");
+	.findall([A11,B11], team_allowed(team(A11),direction(B11)), AllowedTeams);
+	.print("ended: .findall(team_allowed(_,_), ...)");
+	
+	.length(AllowedTeams, N);
+	
+	.print(AllowedTeams);
+	
+	
+	.wait(100000000);
+	*/
+	.findall([DirID,DepId],
+		part_direction_norm(direction(DirID), depot(DepID),_),DirDepsArr);
+	
+	.print(DirDepsArr);
+		
+	for (.member([DirID, DepID], DirDepsArr)){
+		?part_direction_norm(direction(DirID),depot(DepID),part_norms(PartList));
+		for (team(id(TeamID), depot(DepID), _, _)){
+			.print(id(TeamID));
+			if (team_allowed(team(TeamID), direction(DirID))) {
+				for(.member([PartNumber, PartNorm], PartList)){
+					if(allowed_sources(sink(PartID),sources(SourceList))){
+						.concat(SourceList, [TeamID], NewSourceList);
+						-+allowed_sources(sink(PartID),sources(NewSourceList));
+					} else {
+						+allowed_sources(sink(PartID),sources([TeamID]));
+					}
+				}
+			}
+		}
+	}
+	
+	/*
 	for(.member(team_allowed(team(TeamID), direction(DirID)), AllowedTeams)){
 		?part_direction_norm(direction(DirID), _, part_norms(PartList));
-		
+		.print(direction(DirID), part_norms(PartList));
 		for(.member([PartNumber, PartNorm], PartList)){
 			if(PartNorm > 0){
 				!get_p_name(DirID, PartNumber, PartID);
@@ -93,6 +157,7 @@ min_rest(16).
 			}
 		}
 	}
+	*/
 	
 	!set_max_buff;
 	
@@ -287,7 +352,7 @@ min_rest(16).
 
 +!count_cost_by_direction(TeamID, CostTeamDir)
 <-
-	.print(count_cost_by_direction, " ", TeamID);
+	//.print(count_cost_by_direction, " ", TeamID);
 	.count(team_allowed(team(TeamID), _), N);
 	?const_direction(Const2);
 	CostTeamDir = N*Const2;

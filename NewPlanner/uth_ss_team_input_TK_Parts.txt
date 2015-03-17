@@ -1,4 +1,3 @@
-+byParts
 +start_plan_hour(18)
 +part_direction_norm(direction(11),depot(2000036956), part_norms([[1,2],[2,2],[3,2],[4,2],[5,0],[6,1],[7,2],[8,0]]))
 +part_direction_norm(direction(21),depot(2000035252), part_norms([[1,0],[2,0],[3,0],[4,2],[5,0],[6,1],[7,2],[8,0]]))
@@ -19,8 +18,5 @@
 +team(id(2),depot(2000037816),work(will_work(2),will_rest(21)),state(min_rest(16),work_nights(1),overtime(3)))
 +team(id(3),depot(2000036956),work(will_work(2),will_rest(21)),state(min_rest(16),work_nights(1),overtime(3)))
 +buffer(direction(11),time(0))
-+buffer(direction(21),time(0))
++buffer(direction(21),time(1))
 +buffer(direction(31),time(0))
-+date(2015,4,17)
-+time(20,18,33)
-+current_id(1397737113,1)

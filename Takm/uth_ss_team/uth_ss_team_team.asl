@@ -8,6 +8,7 @@ cycles(0).
 
  
 
+
 maxcycles(20*Nteams) :- nteams(Nteams).
 
  
