@@ -284,7 +284,9 @@ objectClass(Object,OClass) :-
 		.findall(assigned(TeamID,PartID), assigned(TeamID,PartID), AssignList);
 		.print(AssignList);
 		
+		-assign_list(_, _);
 		for(.member(assigned(TeamID,PartID),AssignList)) {
+			.print(assigned(TeamID,PartID));
 			if (assign_list(PartID,_)){
 				?assign_list(PartID, AList);
 				.concat([TeamID], AList, NewList);

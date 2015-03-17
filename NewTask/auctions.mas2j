@@ -1,0 +1,6 @@
+MAS auctions {
+	infrastructure : Centralised
+	environment: uth_ss_team_Env 
+	
+	agents: main;
+}
