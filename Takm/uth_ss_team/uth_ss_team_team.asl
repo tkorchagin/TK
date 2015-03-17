@@ -206,7 +206,7 @@ maxcycles(20*Nteams) :- nteams(Nteams).
 			: work(will_work(WorkHours), will_rest(RestHours1), 
 				is_holiday(Holiday)) 
 			<- 
-			+in_work;
+			+in_work; 
 			if(Holiday == yes) {
 				+holiday;
 			};

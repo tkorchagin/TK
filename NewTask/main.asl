@@ -5,6 +5,8 @@ const_direction(1000).
 const_fact(10).
 const_add(100).
 
+min_rest(16).
+
 /*
 source(id(t1),exceed(1)). 
 source(id(t2),exceed(1)). 
@@ -122,6 +124,8 @@ crosscost(source(t4),sink(r2),cost(1)).
 		}
 	}
 	
+	!set_max_buff;
+	
 	for (.member(TeamID,TeamList)){
 		?team(id(TeamID), _, Mode, State);
 		-+source(id(TeamID),exceed(1));
@@ -131,7 +135,7 @@ crosscost(source(t4),sink(r2),cost(1)).
 			for(.member([PartNumber, PartNorm], PartNorms)){
 				if(PartNorm > 0){
 					!get_p_name(DirID, PartNumber, PartID);
-					!count_cost_partN(PartNumber, Mode, CostTeamPart);
+					!count_cost_partN(PartNumber, Mode, State, CostTeamPart);
 					+crosscost(source(TeamID), sink(PartID), 
 						cost(CostTeamPart + CostTeamDir));
 				}
@@ -147,37 +151,50 @@ crosscost(source(t4),sink(r2),cost(1)).
 	.term2string(PartID, PartIDSTR);
 .
 
-+!count_cost_partN(PartNumber, Mode, CostTeamPart)
++!count_cost_partN(PartNumber, Mode, State, CostTeamPart)
 <-
-	if (Mode = work(will_work(MoreWorkHours), will_rest(RestHours))){
-		!count_work_cost(MoreWorkHours, PartNumber, RestHours, CostTeamPart);
-		//.print(work, MoreWorkHours);
+	if (State = state(work_nights(NightsWorked1), _)) {
+		NightsWorked = NightsWorked1;
 	} else {
-		if (Mode = rest(past_rest(PastRestHours), will_rest(MoreRestHours), _)){
-			!count_rest_cost(PartNumber, PastRestHours, MoreRestHours, CostTeamPart)
-			//.print(rest, MoreRestHours);
+		if (State = state(_, work_nights(NightsWorked1), _)){
+			NightsWorked = NightsWorked1;
 		} else {
-			//.print(vacant);
-			?infinity(Inf);
-			CostTeamPart = Inf;
+			NightsWorked = 0;
 		}
 	}
-.
 
-+!count_work_cost(MoreWorkHours, PartNumber, RestHours, CostTeamPart)
-<-
-	//.print(count_work_cost(MoreWorkHours, RestHours, PartNumber));
-	?infinity(Inf);
+	if (Mode = work(will_work(MoreWorkHours), will_rest(RestHours))){
+		//.print(work, MoreWorkHours);
+		!calc_fact_add_work(MoreWorkHours, RestHours, NightsWorked,
+			FactHours, AddHours);
+		//.print(calc_fact_add_work(MoreWorkHours, RestHours, NightsWorked, FactHours, AddHours));
+	} else {
+		if (Mode = rest(past_rest(PastRestHours), will_rest(MoreRestHours), _)){
+			//.print(rest, MoreRestHours);
+			!calc_fact_add_rest(PastRestHours, MoreRestHours, NightsWorked,
+				FactHours, AddHours);
+			//.print(calc_fact_add_rest(PastRestHours, MoreRestHours, NightsWorked, FactHours, AddHours));
+		} else {
+			if (Mode = vacation(will_start(TimeStart))){
+				//.print(vacant);
+				!calc_fact_add_vacation(TimeStart, FactHours);
+				//.print(calc_fact_add_vacation(TimeStart, FactHours));
+			}
+		}
+	}
 	
-	if (RestHours > 16){
-		AddStartTime = MoreWorkHours + 16;
+	?infinity(Inf);
+	if (.ground(FactHours)) {
+		FactStartTime = 24 - FactHours;
+	} else {
+		FactStartTime = Inf;
+	}
+	
+	if (.ground(AddHours)) {
+		AddStartTime = 24 - AddHours;
 	} else {
 		AddStartTime = Inf;
 	}
-	FactStartTime = MoreWorkHours + RestHours;
-	
-	?start_time(StartTime);
-	PartStartTime = PartNumber*3 + StartTime;
 	
 	if (PartStartTime > FactStartTime) {
 		?const_fact(Const1);
@@ -190,32 +207,112 @@ crosscost(source(t4),sink(r2),cost(1)).
 			CostTeamPart = Inf;
 		}
 	}
+	
 .
 
 
-+!count_rest_cost(PartNumber, PastRestHours, MoreRestHours, CostTeamPart)
++!set_max_buff
 <-
-	//.print(count_work_cost(PastRestHours, MoreRestHours, PartNumber));
-	?infinity(Inf);
+	.findall(Time, buffer(_,time(Time)), TimeArr);
+	.max(TimeArr, BufTime);
+	-+max_buffer(BufTime);
+.
+
++!calc_fact_add_work(WorkHours, RestHours1, NightsWorked, FactHours, AddHours)
+<-
+	// work
+	// work(will_work(WorkHours)
+	// will_rest(RestHours1)
+
+	?min_rest(MinRestHours1);
+	?max_buffer(BufTime);
+	RestHours = RestHours1 + BufTime;
+	MinRestHours = MinRestHours1 + BufTime; 
 	
-	AddStartTime = PastRestHours + MoreRestHours;
-	FactStartTime = AddStartTime + 16;
+	?start_plan_hour(StartPlanHour);
+	StartNight = 24 - StartPlanHour;
+	EndNight = (StartNight + 5) mod 24;
 	
 	?start_time(StartTime);
-	PartStartTime = PartNumber*3 + StartTime;
+	!hours_to_end(StartTime, PrevHours);
 	
-	if (PartStartTime > FactStartTime) {
-		?const_fact(Const1);
-		CostTeamPart = (8 - PartNumber + 1) * Const1;
+	//FACT
+	FreeHours = 24 + PrevHours - WorkHours;  // NB - can be > 24!
+	!trunc_hour(24 + PrevHours - WorkHours - RestHours,FactHours);
+	
+	// ADD
+	if (NightsWorked == 2) {
+		!get_nonight_hours(FreeHours - MinRestHours,AddHours,AddStart);
 	} else {
-		if (PartStartTime > AddStartTime) {
-			?const_add(Const2);
-			CostTeamPart = (8 - PartNumber + 1) * Const2;
-		} else {
-			CostTeamPart = Inf;
-		}
+		!trunc_hour(FreeHours - MinRestHours,AddHours);
+	};
+.
+
+
++!calc_fact_add_rest(PastRestHours, MoreRestHours1, NightsWorked, FactHours, AddHours)
+<-
+	// past_rest(PastRestHours)
+	// will_rest(MoreRestHours1)
+
+	?min_rest(MinRestHours1);
+	?max_buffer(BufTime);
+	MoreRestHours = MoreRestHours1 + BufTime;
+	MinRestHours = MinRestHours1 + BufTime; 
+	
+	?start_plan_hour(StartPlanHour);
+	StartNight = 24 - StartPlanHour;
+	EndNight = (StartNight + 5) mod 24;
+	
+	?start_time(StartTime);
+	!hours_to_end(StartTime, PrevHours);
+
+	//FACT
+	!trunc_hour(24 + PrevHours - MoreRestHours,FactHours);
+	
+	// ADD
+	MinMoreRestHours = math.max(0,MinRestHours - PastRestHours);
+	if (NightsWorked == 2) {
+		!get_nonight_hours(24 - MinMoreRestHours,AddHours,AddStart);
+	} else {
+		AddHours = 24 - MinMoreRestHours;
+	};
+.
+
+
++!calc_fact_add_vacation(TimeStart1, FactHours)
+<-
+	// vacation(will_start(TimeStart1))
+
+	?max_buffer(BufTime);
+	TimeStart = TimeStart1 + BufTime;
+	!trunc_hour(24 - TimeStart,FactHours);
+.
+
+
++!hours_to_end(Hrs,New_Hours)
+<-	
+	?start_plan_hour(DC);
+	
+	if (Hrs > DC){
+		New_Hours = 3 - ((Hrs - DC) mod 3);
+	} else {
+		New_Hours = (DC - Hrs) mod 3;
 	}
 .
+
++!get_nonight_hours(AH,0,0) : AH <= 0.
+
++!get_nonight_hours(AvHours,AvHours,24 - AvHours) // planned start recently after night
+	: night_interval(_,NE) & (24 - AvHours) < (NE + 4). 
+		
++!get_nonight_hours(AvHours,24 - NE, NE) // planned start shortly before night
+	: night_interval(NS,NE) & (24 - AvHours) < NE & (24 - AvHours) > NS - 4.
+				
++!get_nonight_hours(_,0,0).	
+
++!trunc_hour(Hours,24): Hours >= 24.			
++!trunc_hour(Hours,0): Hours <= 0.
++!trunc_hour(Hours,math.round(Hours*100) * 0.01): Hours > 0 & Hours < 24.
 
 
 +!count_cost_by_direction(TeamID, CostTeamDir)
