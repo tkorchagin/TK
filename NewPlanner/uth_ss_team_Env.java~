@@ -37,7 +37,8 @@ public class uth_ss_team_Env extends Environment {
 
         super.init(args);
 
-        LoadFromFile("./uth_ss_team_input_TK_Parts.txt"); // TK
+		//LoadFromFile("./uth_ss_team_input_TK_Parts.txt"); // TK
+		LoadFromFile("./uth_ss_team_input_TK.txt"); // TK
 		updatePercepts();
 		
     }
@@ -182,14 +183,27 @@ public class uth_ss_team_Env extends Environment {
 			}
 		} else if (action.getFunctor().contains("parse_string")) {
 			String s = action.getTerm(0).toString();
-			String direction = s;
-			String partN = s;
-			addPercept("robot", Literal.parseLiteral("stock(beer,"+model.availableBeers+")"));
-			Term parsed_percept = Literal.parseLiteral(
-				"parsed(" +s+ "," +direction+ "," +partN+ ")"
-			);s
-			addPercept("main", parsed_percept);
+			String dir = "dir";
+			String separator = "_";
 			
+			String direction = "";
+			String partN = "";
+			
+			int dir_index = s.indexOf(dir);
+			int separator_index = s.indexOf(separator);
+			
+			if(dir_index != -1 & separator_index != -1){
+				direction = s.substring(dir_index+dir.length(), separator_index);
+				partN = s.substring(separator_index + separator.length());
+			} else {
+				direction = "--";
+				partN = "--";
+			}
+			
+			String parsed_percept = "parsed(" +s+ "," +direction+ "," +partN+ ")";
+			addPercept("main", Literal.parseLiteral(parsed_percept));
+			
+			res = true;
 		}
 		updatePercepts();
 		return res;

@@ -30,23 +30,24 @@ crosscost(source(t4),sink(r2),cost(1)).
 */
 
 
-!start.
++endOfFile
+<-
+	!start;
+.
 
 +!start <-
 	.my_name(MyName);
 	+start_time(system.time);
+	.print("main started");
 	
 	!process_data;
+	.print("finished processing");
 	
 	.create_agent(tp,"src/transportation.asl");
-	.findall(source(id(Id),exceed(Cap)),
-			source(id(Id),exceed(Cap)),Sources);
-	.findall(sink(id(Id),need(Cap)),
-			sink(id(Id),need(Cap)),Sinks);
-	.findall(allowed_sources(A,B),
-			allowed_sources(A,B),AllowedSources);
+	.findall(source(id(ID),exceed(CAP)), source(id(ID),exceed(CAP)), Sources);
+	.findall(sink(id(Id),need(Cap)), sink(id(Id),need(Cap)),Sinks);
 	.findall(crosscost(source(Id1),sink(Id2),cost(Cost)),
-			crosscost(source(Id1),sink(Id2),cost(Cost)),	
+		crosscost(source(Id1),sink(Id2),cost(Cost)),	
 			Costs);
 	.length(Sources,Nsources);
 	.length(Sinks,Nsinks);
@@ -55,12 +56,22 @@ crosscost(source(t4),sink(r2),cost(1)).
 		nsinks(Nsinks),
 		ncosts(Ncosts),
 		parent(MyName)]);
+	
+	
 	.send(tp,tell,Sources);
+	.print(send(tp,tell,Sources));
+	
 	.send(tp,tell,Sinks);
-	.send(tp,tell,AllowedSources);
+	.print(send(tp,tell,Sinks));
+	
 	.send(tp,tell,Costs);
+	.print(send(tp,tell,Costs));
+	
 	.send(tp,tell,epsilon_factor(100));
+	.print(send(tp,tell,epsilon_factor(100)));
+	
 	.send(tp,achieve,start);
+	.print(send(tp,achieve,start));
 .	
 
 
@@ -94,17 +105,21 @@ crosscost(source(t4),sink(r2),cost(1)).
 		}
 	}
 	
-	//.print("findall started...");
+	.print("findall started...");
 	.findall(TeamID, part_direction_norm(direction(DirID), _, _)
 		 & team_allowed(team(TeamID),direction(DirID)) 
 		 & team(id(TeamID), _, Mode, State), TeamList);
-	//.print("findall finished");
+	.print("findall finished");
+	
+	.print(TeamList);
 	
 	!set_max_buff;
 	
 	for (.member(TeamID,TeamList)){
 		?team(id(TeamID), _, Mode, State);
-		-+source(id(TeamID),exceed(1));
+		+source(id(TeamID),exceed(1));
+		.print(source(id(TeamID),exceed(1)));
+		
 		!count_cost_by_direction(TeamID, CostTeamDir);
 		for(.member(part(DirID,PartNorms),PartInfoList)){
 			for(.member([PartNumber, PartNorm], PartNorms)){

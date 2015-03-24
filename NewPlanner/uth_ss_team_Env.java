@@ -37,7 +37,8 @@ public class uth_ss_team_Env extends Environment {
 
         super.init(args);
 
-        LoadFromFile("./uth_ss_team_input_TK_Parts.txt"); // TK
+		//LoadFromFile("./uth_ss_team_input_TK_Parts.txt"); // TK
+		LoadFromFile("./uth_ss_team_input_TK.txt"); // TK
 		updatePercepts();
 		
     }
