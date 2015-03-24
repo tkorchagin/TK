@@ -6,7 +6,6 @@ const_add(100).
 
 min_rest(16).
 
-
 /*
 source(id(t1),exceed(1)). 
 source(id(t2),exceed(1)). 
@@ -16,11 +15,8 @@ source(id(t4),exceed(1)).
 sink(id(r1),need(1)).
 sink(id(r2),need(1)).
 
-
-
 allowed_sources(sink(r1),sources([t1,t3,t4])). 
 allowed_sources(sink(r2),sources([t3,t4])).
-
 
 crosscost(source(t1),sink(r1),cost(650)).
 crosscost(source(t1),sink(r2),cost(2)).
@@ -35,7 +31,6 @@ crosscost(source(t4),sink(r2),cost(1)).
 
 
 !start.
-
 
 +!start <-
 	.my_name(MyName);
@@ -99,35 +94,11 @@ crosscost(source(t4),sink(r2),cost(1)).
 		}
 	}
 	
-	.print("findall started...");
+	//.print("findall started...");
 	.findall(TeamID, part_direction_norm(direction(DirID), _, _)
 		 & team_allowed(team(TeamID),direction(DirID)) 
 		 & team(id(TeamID), _, Mode, State), TeamList);
-	.print("findall finished");
-	
-	.findall([DirID,DepID],
-		part_direction_norm(direction(DirID), depot(DepID),_),DirDepsArr);
-	
-	.print(DirDepsArr);
-	
-	/*
-	for (.member([DirID, DepID], DirDepsArr)){
-		?part_direction_norm(direction(DirID),depot(DepID),part_norms(PartList));
-		for (team(id(TeamID), depot(DepID), _, _)){
-			.print(id(TeamID));
-			if (team_allowed(team(TeamID), direction(DirID))) {
-				for(.member([PartNumber, PartNorm], PartList)){
-					if(allowed_sources(sink(PartID),sources(SourceList))){
-						.concat(SourceList, [TeamID], NewSourceList);
-						-+allowed_sources(sink(PartID),sources(NewSourceList));
-					} else {
-						+allowed_sources(sink(PartID),sources([TeamID]));
-					}
-				}
-			}
-		}
-	}
-	*/
+	//.print("findall finished");
 	
 	!set_max_buff;
 	
@@ -146,14 +117,15 @@ crosscost(source(t4),sink(r2),cost(1)).
 			}
 		}
 	}
-	
 .
+
 
 +!get_p_name(DirID, PartNumber, PartID)
 <-
 	.concat(dir, DirID, "_", PartNumber, PartIDSTR);
 	.term2string(PartID, PartIDSTR);
 .
+
 
 +!count_cost_partN(TeamID, PartNumber, Mode, State, CostTeamPart)
 <-
@@ -221,6 +193,7 @@ crosscost(source(t4),sink(r2),cost(1)).
 	.max(TimeArr, BufTime);
 	-+max_buffer(BufTime);
 .
+
 
 +!calc_fact_add_work(WorkHours, RestHours1, NightsWorked, FactHours, AddHours)
 <-
@@ -304,6 +277,7 @@ crosscost(source(t4),sink(r2),cost(1)).
 	}
 .
 
+
 +!get_nonight_hours(AH,0,0) : AH <= 0.
 
 +!get_nonight_hours(AvHours,AvHours,24 - AvHours) // planned start recently after night
@@ -312,7 +286,8 @@ crosscost(source(t4),sink(r2),cost(1)).
 +!get_nonight_hours(AvHours,24 - NE, NE) // planned start shortly before night
 	: night_interval(NS,NE) & (24 - AvHours) < NE & (24 - AvHours) > NS - 4.
 				
-+!get_nonight_hours(_,0,0).	
++!get_nonight_hours(_,0,0).
+
 
 +!trunc_hour(Hours,24): Hours >= 24.			
 +!trunc_hour(Hours,0): Hours <= 0.
@@ -335,6 +310,7 @@ crosscost(source(t4),sink(r2),cost(1)).
 	.print("Total steps: ",TotS);
 .
 
+
 +transportation_streams(Streams)
 	<-
 	for(.member(stream(source(Source),sink(Sink),quantity(Quantity)),
@@ -353,10 +329,9 @@ crosscost(source(t4),sink(r2),cost(1)).
 <-
 	parse_string(Sink);
 	?parsed(Sink, DirID, PartN);
-	
 	?team_fact_add(TeamID, FactStartTime, AddStartTime);
 	
-	.print(team_fact_add(TeamID, FactStartTime, AddStartTime));
+	//.print(team_fact_add(TeamID, FactStartTime, AddStartTime));
 	
 	PartStart = PartN*3;
 	if (PartStart > AddStartTime){
@@ -371,5 +346,4 @@ crosscost(source(t4),sink(r2),cost(1)).
 		CFlag = cut_rest;
 	}
 .
-
 
