@@ -35,6 +35,8 @@ max_repcycles(2).
 .
 
 
+
+
 +!run <-
 				?id(Id);
 				if(not (ndirections(0) | nteams(0))) {
@@ -42,40 +44,35 @@ max_repcycles(2).
 					!process_data;
 					.print("Finished processing");
 					
-					.abolish(plan_ready(_));
+					.abolish(plan_ready(_,_));
 					for(.member(I,[1,2,3,4,5,6,7,8])) {
 						-+interval(I);
 						-+rep_cycles(0);
 						-+util(-100000);
-						-+run;
-						!iterate;
+						-+run(2);
+						!iterate(2);				
+						-+rep_cycles(0);
+						-+util(-100000);
+						-+run(1);
+						!iterate(1);				
 					};
-					
-					// DO Scalar:
-					.findall(A1*10000 + B1,util(_,tuple(A1,B1)),UtilList);
-					.print(UtilList);
-					Util = math.sum(UtilList);
-					-+util(Util);
-					// Dode ^^
-					
 					.print("Finished"); 
 				} else {
 					.puts("Plnannig will not be done for depot # #{Id} due to lack of direction or teams data");
 				};	
 				!check(main(Main));
-				
 				.send(Main,tell,depot_finished(Id));						
 .
 
 
-+!iterate : interval(I) & plan_ready(I).
-+!iterate : interval(I) & not plan_ready(I)
++!iterate(NR) : interval(I) & plan_ready(I,NR).
++!iterate(NR) : interval(I) & not plan_ready(I,NR)
 		<-				
-				!print(runno(run,not_plan_ready));
+				!print(runno(run(NR),not_plan_ready(NR)));
 				?teams(TeamList);
 				!print(depotteamlist(TeamList));
 				.abolish(round_finished(_));
-				.send(TeamList,achieve,run_interval(I));
+				.send(TeamList,achieve,run_interval(I,NR));
 				//.wait({+round_finished});
 				!check(round_finished);
 				
@@ -83,8 +80,7 @@ max_repcycles(2).
 				.abolish(util(_));
 				.abolish(util(_,_));
 				?directions(DirList);
-				.send(DirList,achieve,calc_util);
-				
+				.send(DirList,achieve,calc_util(NR));
 				!check(util(Util));
 				?id(Id);
 				.print(uTIL(Id,I,Util));
@@ -92,13 +88,13 @@ max_repcycles(2).
 					?rep_cycles(NN);
 					-+rep_cycles(NN+1);
 					if(max_repcycles(NN+1)) {
-						+plan_ready(I);
+						+plan_ready(I,NR);
 					};
 				};
-				!iterate;
+				!iterate(NR);
 .       
 
-+!iterate <- .print("Incorrect run").
++!iterate(NR) <- .print("Incorrect run No:", NR).
  
 +!tell(A) <-
 		?main(Main);
@@ -117,7 +113,7 @@ max_repcycles(2).
 //@shg8ubv8[atomic]
 +util(_,_) : .count(util(_,_),N) & ndirections(N)  
 			<-
-			if(run) {
+			if(run(1)) {
 				.findall(tuple(A1,B1),util(_,tuple(A1,B1)),UtilList);
 				!get_sum_util(UtilList,Util);
 			} else {

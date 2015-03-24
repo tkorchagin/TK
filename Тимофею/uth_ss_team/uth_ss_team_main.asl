@@ -68,7 +68,7 @@ version("Team SS planner version 1.0.0.25").
 
 //no_cleanup.
 
-//debug_input.
+debug_input.
 
 //debug_output.
 
@@ -174,22 +174,13 @@ stations([]).
 
 
 +!hours_to_end(Hrs,New_Hours)
-<-	
+<-
 	?start_plan_hour(DC);
-	
-	if (Hrs > DC){
-		New_Hours = 3 - ((Hrs - DC) mod 3);
-	} else {
-		New_Hours = (DC - Hrs) mod 3;
-	}
-	
-	/*
 	if (Hrs < DC){
 		New_Hours = DC - Hrs;
 	} else {
 		New_Hours = (24-Hrs+DC) mod 24;
 	}
-	*/
 .
 
 /////////////////////////////////////    Pre-process     ///////////////////////////////
@@ -223,13 +214,9 @@ stations([]).
 		.plan_label(Print1,debug_print1);
 		.plan_label(Print2,debug_print2);
 		
-		if (byParts){
-			.findall(DepId,depot(id(DepId),_) &
-				part_direction_norm(_,depot(DepId),_),DepotsList1);
-		} else {
-			.findall(DepId,depot(id(DepId),_) &
-				direction_norm(_,depot(DepId),_,_),DepotsList1);
-		}
+		.findall(DepId,depot(id(DepId),_) &
+			direction_norm(_,depot(DepId),
+						_,_),DepotsList1);
 		.union(DepotsList1,[],DepotsList);
 		.length(DepotsList,Ndepots);
 		-+ndepots(Ndepots);
@@ -267,15 +254,9 @@ stations([]).
 			
 			/// direction agents creation and data transfer  
 			
-			if (byParts){
-			.findall(DirId,
-				part_direction_norm(direction(DirId),depot(DepId),part_norms(PartList)),DirList);
-			} else {
 			.findall(DirId,
 				direction_norm(direction(DirId),depot(DepId),
 						first_shift(FNorm),second_shift(SNorm)),DirList);
-			}
-			
 
 			-directions(depot(DepId),_);
 			+directions(depot(DepId),[]);
@@ -285,36 +266,22 @@ stations([]).
 				+dirname(id(DirId),name(DirName));
 				.create_agent(DirName,DirPath);
 				
-				if (byParts){
-					?part_direction_norm(direction(DirId),depot(DepId), part_norms(PartList));
-				} else {
-					?direction_norm(direction(DirId),depot(DepId), first_shift(FNorm),second_shift(SNorm));
-				}
-				
+				?direction_norm(direction(DirId),depot(DepId),
+						first_shift(FNorm),second_shift(SNorm));
 				?buffer(direction(DirId), time(BufTime));
+						
 
 				//.findall(TeamId,team_allowed(team(TeamId),direction(DirId)),
 				//			TeamList);
-				
-				if (byParts){
-					.send(DirName,tell,[id(DirId),
-										byParts,
-										part_norms(PartList),
-										depot(DepId),
-										depot_name(DepName),
-										main(Name),
-										buffer(DirId,BufTime)
-										]);
-				} else {
-					.send(DirName,tell,[id(DirId),
-										norm(shift(1),FNorm),
-										norm(shift(2),SNorm),
-										depot(DepId),
-										depot_name(DepName),
-										main(Name),
-										buffer(DirId,BufTime)
-										]);
-				}
+						
+				.send(DirName,tell,[id(DirId),
+									norm(shift(1),FNorm),
+									norm(shift(2),SNorm),
+									depot(DepId),
+									depot_name(DepName),
+									main(Name),
+									buffer(DirId,BufTime)
+									]);
 
 				
 				.send(DirName,tellHow,
@@ -399,11 +366,8 @@ stations([]).
 			.length(Directions,Ndirections);
 			.send(DepName,tell,directions(Directions));
 			.send(DepName,tell,ndirections(Ndirections));
-			if (byParts){
-				.abolish(part_direction_norm(_,depot(DepId),_));
-			} else {
-				.abolish(direction_norm(_,depot(DepId),_,_));
-			}
+			.abolish(direction_norm(_,depot(DepId),_,_));
+			
 			
 			/// team agents creation and data transfer
 			/// direction agents creation and data transfer  
@@ -471,7 +435,7 @@ stations([]).
 		.abolish(depot(_,_));
 .		
 
-///////////////////////////////////// MAIN //////////////////////////////////////////////
+/////////////////////////////////////  MAIN //////////////////////////////////////////////
 
 
 +!run <-

@@ -1,6 +1,6 @@
 debug.
 //opdebug.
-nokill.
+//nokill.
 
 step(0).
 sent(0).
@@ -17,7 +17,7 @@ person_prefix("p").
 object_prefix("o").
 
 
-version("Version 5.0").
+version("Version 5.1 by 18/03/2015. A.Takmazian. Programpark. Moscow.").
 
 /*
 
@@ -30,6 +30,8 @@ Version 4.2 : 	1) LocalMaxSteps corrected
 Version 4.2.1 : 	1) Double inversion of NewBidProfits eliminated		
 
 Version 5.0: You Can Specify Allowed Sources for Each Sink    
+Version 5.1: Allowed Sources for Each Sink is specified by presence of "crosscost" belief (18/03/2015)    
+
 
 This routine implements solution of the 
 Trasportation Problem described at 
@@ -59,11 +61,7 @@ II. sink(id(Id), need(Capacity)) -
 III. crosscost(source(SourceId),sink(SinkId),cost(Cost)) - 
 	Cost (any real) of transportation of one unit from source 
 	SourceId to sink SinkId
-
-IV. allowed_sources(sink(id(Id),sources([Id1,...,IdN]))
-
-	1. Id - sink identifier
-	3. Id1,...,IdN - Ids of sources, which can be directed to this sink
+	If this belief is absent, then you can not assign this source to this sink
 
 	
 Outputs:
@@ -78,14 +76,13 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		auxiliiary (debug) info about calculation
 */
 
-init.
+!print_header.
 
-+init <-
++!print_header <-
 				// identify myself
 				?version(Version);
 				.print("Transportation task solver utility",
 				" based on Bertsekas-Catanon auction algorithm. ", Version);
-
 .	
 
 
@@ -151,13 +148,8 @@ init.
 	}
 	
 	.findall(Id,source(id(Id),_),AllSources);
-	for(sink(id(SinkId),_)) {
-		if(not allowed_sources(sink(SinkId),_)) {
-			+allowed_sources(sink(SinkId),sources(AllSources));
-		}
-	}
 	
-	.abolish(allowed_persons(_,_));
+	
 	if(TotSinks > TotSources) {
 		-+nobjects(TotSinks);
 		-+npersons(TotSources);
@@ -170,10 +162,6 @@ init.
 				POCosts);
 		-+pclasses(PersonClasses);
 		-+oclasses(ObjectClasses);
-		for(allowed_sources(sink(ASink),sources(ListOfSources)))
-		{
-			+allowed_persons(object(ASink),persons(ListOfSources));
-		}
 
 	} else {
 		-+nobjects(TotSources);
@@ -187,14 +175,6 @@ init.
 				POCosts);
 		-+pclasses(PersonClasses);
 		-+oclasses(ObjectClasses);
-		for(.member(oclass(SourceId,_),ObjectClasses))
-		{
-			.findall(SinkId, 
-				allowed_sources(sink(SinkId),sources(ListOfSources))
-				& .member(SourceId,ListOfSources),
-					ListOfSinks);
-			+allowed_persons(object(SourceId),persons(ListOfSinks));
-		}
 	}
 	
 	
@@ -242,18 +222,12 @@ init.
 		.findall(PClassCost,
 			.member(pocost(PClass,_,PClassCost),POCosts) 
 			,PClassCosts);
-		if(.length(PClassCosts,PClassCostsNum) & PClassCostsNum < NOClasses) {
-			.concat("Number of costs ",PClassCostsNum,
-				" for person class ",PClass,
-				" is less then number of object classes", NOClasses,
-				CostMessage); 
-			!stop(CostMessage);
-		}
 		.max(PClassCosts,MaxPClassCost);
+		.length(PClassCosts,MyNOClasses);
 		Eps = MaxPClassCost / EpsFact;
 		.send(PClassAgent,tell,[
 				main(MyName),
-				nobject_classes(NOClasses),
+				nobject_classes(MyNOClasses),
 				myclass(PClass),
 				myclassCapacity(NPC),
 				epsilon(Eps)]);
@@ -262,11 +236,12 @@ init.
 		!wait(nobject_classes_got[source(PClassAgent)]);
 		!wait(main_got[source(PClassAgent)]);
 		for(.member(oclass(OClass,NOC),ObjectClasses)) {
-			.member(pocost(PClass,OClass,Cost),POCosts);	// determining cost 
-			Util = MaxPClassCost - Cost + 1;
-			.send(PClassAgent,tell,
-						[cost(OClass,Cost)	// PClass Agent has to know the price 
-						,util(OClass,Util)]);
+			if(.member(pocost(PClass,OClass,Cost),POCosts)) {	// there is such cost  
+				Util = MaxPClassCost - Cost + 1;
+				.send(PClassAgent,tell,
+							[cost(OClass,Cost)	// PClass Agent has to know the price 
+							,util(OClass,Util)]);
+			}
 		}
 	
 	} 
@@ -278,14 +253,13 @@ init.
 	?object_classes(OClasses);
 	
 	for(.member(oclass(OClass,_),ObjectClasses)) {
-		?allowed_persons(object(OClass),persons(Allowed_persons));
-		.length(Allowed_persons,NAllowedPC);
 		?oclass_agent(id(OClass),agent(OClassAgent));
-		.send(OClassAgent,tell,	nperson_classes(NAllowedPC));
 		.findall(PClassAgent,
-			.member(PClass,Allowed_persons) &
-			pclass_agent(id(PClass),agent(PClassAgent)),
+			.member(pocost(PClass,OClass,Cost),POCosts)
+			& pclass_agent(id(PClass),agent(PClassAgent)),
 			ThisObjectPersonClasses);
+		.length(ThisObjectPersonClasses,NAllowedPC);
+		.send(OClassAgent,tell,	nperson_classes(NAllowedPC));
 		.send(OClassAgent,achieve,set_person_classes(ThisObjectPersonClasses));
 	}
 	
@@ -317,7 +291,7 @@ init.
 		?weight(Weight);
 		?nperson_classes(Dim);
 		Share = Weight / (N+Dim);
-		.send(Recip,achieve,addweight(Share));	// share the weight with recipients
+		.send(Recip,achieve,addweight(Share));	 // share the weight with recipients
 		!addweight(-N*Share);
 .
 
@@ -498,7 +472,6 @@ init.
 	.abolish(nsources(_));
 	//.abolish(ncosts(_));
 	.abolish(results(_)[_]);
-	.abolish(allowed_sources(_,_));
 .
 
 

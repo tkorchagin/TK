@@ -1,7 +1,4 @@
-+byParts
 +start_plan_hour(18)
-+part_direction_norm(direction(2001939893),depot(2000036956), part_norms([[1,2],[2,2],[3,2],[4,2],[5,0],[6,1],[7,2],[8,0]]))
-+part_direction_norm(direction(2001939894),depot(2000036956), part_norms([[1,10],[2,11],[3,2],[4,10],[5,6],[6,8],[7,2],[8,14]]))
 +depot(id(2000035162),night_start(6))
 +depot(id(2000036018),night_start(6))
 +depot(id(2000036604),night_start(6))
@@ -21,6 +18,8 @@
 +depot(id(2000038358),night_start(6))
 +depot(id(2000036300),night_start(6))
 +depot(id(2000036422),night_start(6))
++part_direction_norm(direction(2001939893),depot(2000036956),part_norms([[1,2],[2,2],[3,2],[4,2],[6,0],[7,0],[8,0],[8,3]]))
++part_direction_norm(direction(2001939894),depot(2000036956),part_norms([[1,8],[2,8],[3,8],[4,9],[6,7],[7,7],[8,7],[8,9]]))
 +team_allowed(team(2002108685),direction(2001939889))
 +team_allowed(team(2002108685),direction(2001939945))
 +team_allowed(team(2002122853),direction(2001939865))
@@ -11991,6 +11990,3 @@
 +buffer(direction(2001939886),time(1.46))
 +buffer(direction(2001939984),time(0))
 +buffer(direction(2001940008),time(1.5))
-+date(2014,4,17)
-+time(16,18,33)
-+current_id(1397737113,1)

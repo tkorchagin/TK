@@ -105,25 +105,12 @@ crosscost(source(t4),sink(r2),cost(1)).
 		 & team(id(TeamID), _, Mode, State), TeamList);
 	.print("findall finished");
 	
-	
-	
-	/*
-	.print("started: .findall(team_allowed(_,_), ...)");
-	.findall([A11,B11], team_allowed(team(A11),direction(B11)), AllowedTeams);
-	.print("ended: .findall(team_allowed(_,_), ...)");
-	
-	.length(AllowedTeams, N);
-	
-	.print(AllowedTeams);
-	
-	
-	.wait(100000000);
-	*/
-	.findall([DirID,DepId],
+	.findall([DirID,DepID],
 		part_direction_norm(direction(DirID), depot(DepID),_),DirDepsArr);
 	
 	.print(DirDepsArr);
-		
+	
+	/*
 	for (.member([DirID, DepID], DirDepsArr)){
 		?part_direction_norm(direction(DirID),depot(DepID),part_norms(PartList));
 		for (team(id(TeamID), depot(DepID), _, _)){
@@ -140,23 +127,6 @@ crosscost(source(t4),sink(r2),cost(1)).
 			}
 		}
 	}
-	
-	/*
-	for(.member(team_allowed(team(TeamID), direction(DirID)), AllowedTeams)){
-		?part_direction_norm(direction(DirID), _, part_norms(PartList));
-		.print(direction(DirID), part_norms(PartList));
-		for(.member([PartNumber, PartNorm], PartList)){
-			if(PartNorm > 0){
-				!get_p_name(DirID, PartNumber, PartID);
-				if(allowed_sources(sink(PartID),sources(SourceList))){
-					.concat(SourceList, [TeamID], NewSourceList);
-					-+allowed_sources(sink(PartID),sources(NewSourceList));
-				} else {
-					+allowed_sources(sink(PartID),sources([TeamID]));
-				}
-			}
-		}
-	}
 	*/
 	
 	!set_max_buff;
@@ -164,13 +134,12 @@ crosscost(source(t4),sink(r2),cost(1)).
 	for (.member(TeamID,TeamList)){
 		?team(id(TeamID), _, Mode, State);
 		-+source(id(TeamID),exceed(1));
-		//.print(source(id(TeamID),exceed(1)));
 		!count_cost_by_direction(TeamID, CostTeamDir);
 		for(.member(part(DirID,PartNorms),PartInfoList)){
 			for(.member([PartNumber, PartNorm], PartNorms)){
 				if(PartNorm > 0){
 					!get_p_name(DirID, PartNumber, PartID);
-					!count_cost_partN(PartNumber, Mode, State, CostTeamPart);
+					!count_cost_partN(TeamID, PartNumber, Mode, State, CostTeamPart);
 					+crosscost(source(TeamID), sink(PartID), 
 						cost(CostTeamPart + CostTeamDir));
 				}
@@ -186,7 +155,7 @@ crosscost(source(t4),sink(r2),cost(1)).
 	.term2string(PartID, PartIDSTR);
 .
 
-+!count_cost_partN(PartNumber, Mode, State, CostTeamPart)
++!count_cost_partN(TeamID, PartNumber, Mode, State, CostTeamPart)
 <-
 	if (State = state(work_nights(NightsWorked1), _)) {
 		NightsWorked = NightsWorked1;
@@ -199,21 +168,15 @@ crosscost(source(t4),sink(r2),cost(1)).
 	}
 
 	if (Mode = work(will_work(MoreWorkHours), will_rest(RestHours))){
-		//.print(work, MoreWorkHours);
 		!calc_fact_add_work(MoreWorkHours, RestHours, NightsWorked,
 			FactHours, AddHours);
-		//.print(calc_fact_add_work(MoreWorkHours, RestHours, NightsWorked, FactHours, AddHours));
 	} else {
 		if (Mode = rest(past_rest(PastRestHours), will_rest(MoreRestHours), _)){
-			//.print(rest, MoreRestHours);
 			!calc_fact_add_rest(PastRestHours, MoreRestHours, NightsWorked,
 				FactHours, AddHours);
-			//.print(calc_fact_add_rest(PastRestHours, MoreRestHours, NightsWorked, FactHours, AddHours));
 		} else {
 			if (Mode = vacation(will_start(TimeStart))){
-				//.print(vacant);
 				!calc_fact_add_vacation(TimeStart, FactHours);
-				//.print(calc_fact_add_vacation(TimeStart, FactHours));
 			}
 		}
 	}
@@ -229,6 +192,12 @@ crosscost(source(t4),sink(r2),cost(1)).
 		AddStartTime = 24 - AddHours;
 	} else {
 		AddStartTime = Inf;
+	}
+	
+	if (team_fact_add(TeamID, _, _)){
+		-+team_fact_add(TeamID, FactStartTime, AddStartTime);
+	} else {
+		+team_fact_add(TeamID, FactStartTime, AddStartTime);
 	}
 	
 	if (PartStartTime > FactStartTime) {
@@ -370,9 +339,37 @@ crosscost(source(t4),sink(r2),cost(1)).
 	<-
 	for(.member(stream(source(Source),sink(Sink),quantity(Quantity)),
 		Streams)) {
-		.puts("Assign from source #{Source} to sink #{Sink} total of #{Quantity} resources");
+		//.puts("Assign from source #{Source} to sink #{Sink} total of #{Quantity} resources");
+		
+		!get_dirid_partn_worktime(Source, Sink, DirID, PartN, WorkFrom, CFlag);
+		.puts("to_work(id(#{Source}), direction(#{DirID}), work_from(#{WorkFrom}), call_type(#{CFlag}))");
 	}
 	?start_time(ST);
 	.print("calculation time: ",(system.time-ST)/1000," s");
 .
+
+
++!get_dirid_partn_worktime(TeamID, Sink, DirID, PartN, WorkFrom, CFlag)
+<-
+	parse_string(Sink);
+	?parsed(Sink, DirID, PartN);
+	
+	?team_fact_add(TeamID, FactStartTime, AddStartTime);
+	
+	.print(team_fact_add(TeamID, FactStartTime, AddStartTime));
+	
+	PartStart = PartN*3;
+	if (PartStart > AddStartTime){
+		if (PartStart > FactStartTime) {
+			WorkFrom = PartStart;
+		} else {
+			WorkFrom = FactStartTime;
+		}
+		CFlag = full_rest;
+	} else {
+		WorkFrom = AddStartTime;
+		CFlag = cut_rest;
+	}
+.
+
 

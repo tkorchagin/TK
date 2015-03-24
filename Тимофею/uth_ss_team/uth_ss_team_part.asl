@@ -1,7 +1,10 @@
 ////////////// direction agent which controls the vacancies refill  //////////////////
 
-team_list([]).
+team_list(1,[]).
 team_count(0).
+
+team_list(2,[]).
+
 
 +!init <-
 			.my_name(Name);
@@ -37,9 +40,9 @@ team_count(0).
 .
 
 @u98hfo9 //[atomic]
-+!calc_util <-
-		?team_list(TUL);
-		!get_sum_util(TUL,Util);
++!calc_util(NR) <-
+		?team_list(NR,TUL);
+		!get_sum_util(NR,TUL,Util);
 		?name(Name);
 		!print(util(Name,Util));
 		?no(No1);
@@ -48,24 +51,24 @@ team_count(0).
 .
 
 
--!calc_util  <-
-		?team_list(TUL);
+-!calc_util(NR)  <-
+		?team_list(NR,TUL);
 .
 
-+!get_sum_util([],tuple(0,0)).
++!get_sum_util(1,[],tuple(0,0)).
 
-+!get_sum_util([tuple(tuple(A,B),_)|Tail],
++!get_sum_util(1,[tuple(tuple(A,B),_)|Tail],
 	tuple(Asum,Bsum)) <-
-		!get_sum_util(Tail,tuple(A1,B1));
+		!get_sum_util(1,Tail,tuple(A1,B1));
 		Asum = A+A1;
 		Bsum = B+B1;
 .		
 
 
-+!get_sum_util([],0).
++!get_sum_util(2,[],0).
 
-+!get_sum_util([tuple(A,_)|Tail],Sum) <-
-		!get_sum_util(Tail,A1);
++!get_sum_util(2,[tuple(A,_)|Tail],Sum) <-
+		!get_sum_util(2,Tail,A1);
 		Sum = A+A1;
 .		
 
@@ -84,7 +87,8 @@ team_count(0).
 		<- 
 		if(vacant) {
 			.send(Team,askOne,plusutil(fact,PU), plusutil(fact,PU));
-			!add_team(Team,PU);
+			.send(Team,askOne,plusutil(2,PU2), plusutil(2,PU2));
+			!add_team(Team,PU,PU2);
 		} else {
 			?id(Id);
 			.send(Team,achieve,set_free);
@@ -101,14 +105,19 @@ team_count(0).
 		
 
 @paddteam1[atomic]		
-+!add_team(Team,PlusUtil)  
++!add_team(Team,PlusUtil,PU2)  
 		<- 
-			?team_list(LL);
+			?team_list(1,LL);
+			?team_list(2,LL2);
 			?team_count(N); 
 			.union([tuple(PlusUtil,Team)],LL,NewLL);
+			.union([tuple(PU2,Team)],LL2,NewLL2);
 			!print(add_sl(tuple(PlusUtil,Team)));
-			-team_list(_);
-			+team_list(NewLL);
+			-team_list(1,_);
+			-team_list(2,_);
+			+team_list(1,NewLL);
+			+team_list(2,NewLL2);
+			!print(add_sl(team_list(1,NewLL), team_list(2,NewLL2)));
 			+team(Team);	
 			-+team_count(N+1);
 			!update_vacant;
@@ -126,14 +135,14 @@ team_count(0).
 .
 
 @isvacant0[atomic]
-+?is_vacant(Name,_,false) : norm(0)		// If no need of this shift
++?is_vacant(Name,_,_,false) : norm(0)		// If no need of this shift
 	<-		
 			//.send(Name,tell,reply(false));
 			!print(send(Name,tell,reply(false)));
 .
 
 @isvacant[atomic]
-+?is_vacant(Name,_,vacant): vacant <-
++?is_vacant(Name,_,_,vacant): vacant <-
 				-vacant;
 				+busy(Name);
 				//.send(Name,tell,reply(vacant));
@@ -142,24 +151,29 @@ team_count(0).
 
 
 @isvacant2[atomic]
-+?is_vacant(Name,_,busy): busy(_)
++?is_vacant(Name,_,_,busy): busy(_)
 <- //.send(Name,tell,reply(busy)); 
 	!print(send(Name,tell,reply(busy)));
 .				
 
 @isvacant3[atomic]								// if no more place - then check utility
-+?is_vacant(Name,PlusUtil,Reply): not vacant
++?is_vacant(Name,PlusUtil,NR,Reply): not vacant
 			<-
  			!print(["not vacant,",Name]);
-			?team_list(A);
+			?team_list(NR,A);
 			!print([tl(A),tuple(PlusUtil,Name)]);
 			if( A = [tuple(Util1,Name1)|T] & .sort([PlusUtil,Util1],[Util1,_] ) & 
 				not PlusUtil = Util1) {  					// Utility is better
 				!print(swap(tuple(PlusUtil,Name),tuple(Util1,Name1)));
 				+busy(Name);
-				-team_list(A);
-				+team_list(T);
-				!print(rem(team_list(T)));
+				-team_list(NR,A);
+				+team_list(NR,T);
+				CNR = 3-NR;
+				?team_list(CNR,T2L);
+				.delete(tuple(_,Name1),T2L,T2LNew);
+				-team_list(CNR,_);
+				+team_list(CNR,T2LNew);
+				!print(rem(team_list(NR,T)));
 				?team_count(N);
 				-+team_count(N-1);
 				-team(Name1);	

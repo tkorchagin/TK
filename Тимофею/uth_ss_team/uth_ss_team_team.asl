@@ -8,7 +8,6 @@ cycles(0).
 
  
 
-
 maxcycles(20*Nteams) :- nteams(Nteams).
 
  
@@ -135,6 +134,8 @@ maxcycles(20*Nteams) :- nteams(Nteams).
 			+plusutil(add,
 				tuple(CutPriority, 200 - WorkPercentage));  
 								
+			+plusutil(2,1000-Ndirections);
+			
 			?fact(FactHours);
 			?add(tuple(AddHours,AddStart));
 
@@ -160,23 +161,24 @@ maxcycles(20*Nteams) :- nteams(Nteams).
 
 
 +!clean_part_names_intervals <-
-				.abolish(part_names_interval(_,_));
+				.abolish(part_names_interval(_,_,_));
 .
 
 +!add_part_names_interval(PartNo,PartNamesByNo) <-
-				+part_names_interval(PartNo,PartNamesByNo);
+				+part_names_interval(1,PartNo,PartNamesByNo);
+				+part_names_interval(2,PartNo,PartNamesByNo);
 .				
 
 
-+?part_names_interval(PartList) : run & interval(I) 
-				& part_names_interval(I,PartList). 
++?part_names_interval(PartList) : run(NR) & interval(I) 
+				& part_names_interval(NR,I,PartList). 
 			
 					
 //@pupdpni[atomic]	
-+!update_part_names_interval(NewPartList) : interval(I) & run
++!update_part_names_interval(NewPartList) : interval(I) & run(NR)
 			<-
-				-part_names_interval(I,_);
-				+part_names_interval(I,NewPartList);
+				-part_names_interval(NR,I,_);
+				+part_names_interval(NR,I,NewPartList);
 .
 			
 
@@ -207,7 +209,7 @@ maxcycles(20*Nteams) :- nteams(Nteams).
 			: work(will_work(WorkHours), will_rest(RestHours1), 
 				is_holiday(Holiday)) 
 			<- 
-			+in_work; 
+			+in_work;
 			if(Holiday == yes) {
 				+holiday;
 			};
@@ -415,21 +417,21 @@ maxcycles(20*Nteams) :- nteams(Nteams).
 
 //////////////////////////////////// MAIN ////////////////////////////////////////////
 
-+!run_interval(I) <- 
++!run_interval(I,NR) <- 
 		-+interval(I);
 		-+cycles(0);
-		!run;
+		!run(NR);
 .		
 
 
-+!run: planned(_) <- !print(run(planned)); 
-			-+run; !finish_round.
++!run(NR): planned(_) <- !print(run(NR,planned)); 
+			-+run(NR); !finish_round.
 
-+!run : nodirection(0) <-  !print(run(nodirection)); !finish_round. 
++!run(_) : nodirection(0) <-  !print(run(NR,nodirection)); !finish_round. 
 
-+!run  <-
-		!print(run(position));
-		-+run;
++!run(NR)  <-
+		!print(run(NR,position));
+		-+run(NR);
 		!position;
 .		
 
@@ -443,7 +445,7 @@ maxcycles(20*Nteams) :- nteams(Nteams).
 			.abolish(chance);						// no info about stations vacancy
 			!position(PartList,false).
 
-+!position : not freehours <- !print(position(nofreehours)); !finish_round.
++!position : not freehours <- !print(position(NR,nofreehours)); !finish_round.
 			
 +!position(_,_): planned(_) <- 			
 				!print(planned);
@@ -469,11 +471,12 @@ maxcycles(20*Nteams) :- nteams(Nteams).
 +!position([PartName|Tail],_) <-
 			!print(find);
 			?name(Name);
+			?run(NR);
 			?part_name(PartNo,PartName);
-			?plusutil(PartNo,PU);
+			?plusutil(NR,PartNo,PU);
 			
-			.send(PartName,askOne,is_vacant(Name,PU,Reply),is_vacant(Name,PU,Reply));
-			!print(send(PartName,askOne,is_vacant(Name,PU,Reply)));
+			.send(PartName,askOne,is_vacant(Name,PU,NR,Reply),is_vacant(Name,PU,NR,Reply));
+			!print(send(PartName,askOne,is_vacant(Name,PU,NR,Reply)));
 			!print(reply(Reply));
 			!check_response(PartName,Reply);
 			!position(Tail,Reply).
@@ -501,22 +504,23 @@ maxcycles(20*Nteams) :- nteams(Nteams).
 			+planned(part_name(PartName));
 			?depot_name(Depot);
 			.send(Depot,tell,planned(Name));
-			?plusutil(PartNo,PU);
-			!print(add_team(PartName,PU));
+			?plusutil(1,PartNo,PU);
+			?plusutil(2,PartNo,PU2);
+			!print(add_team(PartName,PU,PU2));
 			.abolish(added);
-			.send(PartName,achieve,add_team(Name,PU));
+			.send(PartName,achieve,add_team(Name,PU,PU2));
 			!check(added);
 .			
 
 
-+?plusutil(PartNo,tuple(A,B)): hours(fact,PartNo,_) <- 
++?plusutil(1,PartNo,tuple(A,B)): hours(fact,PartNo,_) <- 
 			?plusutil(fact,tuple(A,B)).
 
-+?plusutil(PartNo,tuple(A,B)): hours(add,PartNo,_) <- 
++?plusutil(1,PartNo,tuple(A,B)): hours(add,PartNo,_) <- 
 			?plusutil(add,tuple(A,B)).		
 
 /* //from v.13.
-+?plusutil(PartNo,tuple(Anew-WE,B,C)): hours(fact,PartNo,_) <- 
++?plusutil(1,PartNo,tuple(Anew-WE,B,C)): hours(fact,PartNo,_) <- 
 			?plusutil(fact,tuple(A,B,C));
 			!get_rest_ratio(3*(PartNo-1),RestRatio);
 			RR = math.round(RestRatio*100);
@@ -529,7 +533,7 @@ maxcycles(20*Nteams) :- nteams(Nteams).
 .
 
 									
-+?plusutil(PartNo,tuple(A,Bnew-WE,C)): hours(add,PartNo,_) <- 
++?plusutil(1,PartNo,tuple(A,Bnew-WE,C)): hours(add,PartNo,_) <- 
 			?plusutil(add,tuple(A,B,C));			
 			!get_rest_ratio(3*(PartNo-1),RestRatio);
 			RR = math.round(RestRatio*100);
@@ -542,7 +546,10 @@ maxcycles(20*Nteams) :- nteams(Nteams).
 .			
 */
 			
-+?plusutil(_,_) <- .print("Plusutil has wrong argument. STOP."); !stop.
++?plusutil(1,_,_) <- .print("Plusutil has wrong argument. STOP."); !stop.
+
++?plusutil(2,_,PU2) <- ?plusutil(2,PU2).  
+
 
 //@f8gt4rr[atomic]
 +!set_free
@@ -602,8 +609,10 @@ maxcycles(20*Nteams) :- nteams(Nteams).
 				+rest_ratio(RestRatio);
 				?buffer(DirId,DirBufTime);
 				
-				?plusutil(No1,tuple(U1,U2));  
-				Util = U1*1000000 + U2*1000;
+				?plusutil(1,No1,tuple(U1,U2));  
+				?plusutil(2,U4);
+				Util = U1*1000000 + U2*1000 +
+						 + U4;
 				Rank = 90000000 - Util;
 				
 				!tell(to_work(id(Id), direction(DirId),  
