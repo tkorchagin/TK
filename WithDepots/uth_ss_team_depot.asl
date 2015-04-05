@@ -1,8 +1,9 @@
-infinity(1000000000).
+infinity(10000000000).
+fakepart(fakepart).
 
-const_direction(1000).
-const_fact(10).
-const_add(100).
+const_direction(10000).
+const_fact(100).
+const_add(1000).
 
 min_rest(16).
 
@@ -30,17 +31,14 @@ crosscost(source(t4),sink(r2),cost(1)).
 */
 
 
-+endOfFile
++!start
 <-
-	!start;
-.
-
-+!start <-
 	.my_name(MyName);
 	+start_time(system.time);
 	.print("main started");
 	
 	!process_data;
+	//!add_fake_source;
 	.print("finished processing");
 	
 	.create_agent(tp,"src/transportation.asl");
@@ -56,7 +54,6 @@ crosscost(source(t4),sink(r2),cost(1)).
 		nsinks(Nsinks),
 		ncosts(Ncosts),
 		parent(MyName)]);
-	
 	
 	.send(tp,tell,Sources);
 	.print(send(tp,tell,Sources));
@@ -91,14 +88,15 @@ crosscost(source(t4),sink(r2),cost(1)).
 		+team_allowed(team(2002093013),direction(2001939893))
 	*/
 	
-	.findall(part(DirID,PartNorms), 
-		part_direction_norm(direction(DirID), 
-			depot(_), part_norms(PartNorms)), PartInfoList);
+	.findall(part(DirID, PartNorms),
+		part_direction_norm(direction(DirID), depot(_), part_norms(PartNorms)), 
+			PartInfoList);
 	
+	?depotID(DepotID);
 	for(.member(part(DirID,PartNorms),PartInfoList)){
 		for(.member([PartNumber, PartNorm], PartNorms)){
 			if (PartNorm > 0){
-				!get_p_name(DirID, PartNumber, PartID);
+				!get_p_name(DepotID, DirID, PartNumber, PartID);
 				+sink(id(PartID),need(PartNorm));
 				//.print(sink(id(PartID),need(PartNorm)));
 			}
@@ -134,10 +132,26 @@ crosscost(source(t4),sink(r2),cost(1)).
 	}
 .
 
++!add_fake_source <-
+	.findall(PartNorm, sink(id(_),need(PartNorm)) & PartNorm > 0, NormListSpec);
+	TotalNorm = math.sum(NormListSpec);
+	.findall(TeamID, source(id(TeamID),_), TeamListSpec);
+	.length(TeamListSpec,TotalTeams);
+	TeamExcess = TotalTeams - TotalNorm;
+	if(TeamExcess >= 0) {
+		?infinity(Inf);
+		?fakepart(Fakepart);
+		+sink(id(Fakepart),need(TeamExcess+1));
+		for(source(id(TeamID),_)) {
+			+crosscost(source(TeamID), sink(Fakepart), cost(Inf));
+		}
+	}
+.
 
-+!get_p_name(DirID, PartNumber, PartID)
+
++!get_p_name(DepotID, DirID, PartNumber, PartID)
 <-
-	.concat(dir, DirID, "_", PartNumber, PartIDSTR);
+	.concat("dep", DepotID, "_dir", DirID, "_", PartNumber, PartIDSTR);
 	.term2string(PartID, PartIDSTR);
 .
 
@@ -221,9 +235,9 @@ crosscost(source(t4),sink(r2),cost(1)).
 	RestHours = RestHours1 + BufTime;
 	MinRestHours = MinRestHours1 + BufTime; 
 	
-	?start_plan_hour(StartPlanHour);
-	StartNight = 24 - StartPlanHour;
-	EndNight = (StartNight + 5) mod 24;
+	//?start_plan_hour(StartPlanHour);
+	//StartNight = 24 - StartPlanHour;
+	//EndNight = (StartNight + 5) mod 24;
 	
 	?start_time(StartTime);
 	!hours_to_end(StartTime, PrevHours);
@@ -251,9 +265,9 @@ crosscost(source(t4),sink(r2),cost(1)).
 	MoreRestHours = MoreRestHours1 + BufTime;
 	MinRestHours = MinRestHours1 + BufTime; 
 	
-	?start_plan_hour(StartPlanHour);
-	StartNight = 24 - StartPlanHour;
-	EndNight = (StartNight + 5) mod 24;
+	//?start_plan_hour(StartPlanHour);
+	//StartNight = 24 - StartPlanHour;
+	//EndNight = (StartNight + 5) mod 24;
 	
 	?start_time(StartTime);
 	!hours_to_end(StartTime, PrevHours);
@@ -327,16 +341,25 @@ crosscost(source(t4),sink(r2),cost(1)).
 
 
 +transportation_streams(Streams)
-	<-
+<-
+	+toWorkArr([]);
+	
 	for(.member(stream(source(Source),sink(Sink),quantity(Quantity)),
 		Streams)) {
-		//.puts("Assign from source #{Source} to sink #{Sink} total of #{Quantity} resources");
 		
 		!get_dirid_partn_worktime(Source, Sink, DirID, PartN, WorkFrom, CFlag);
-		.puts("to_work(id(#{Source}), direction(#{DirID}), work_from(#{WorkFrom}), call_type(#{CFlag}))");
+		?toWorkArr(WorkArr);
+		.concat(WorkArr,
+			[to_work(id(Source), direction(DirID), work_from(WorkFrom), call_type(CFlag))],
+				ToWorkArr);
+		-+toWorkArr(ToWorkArr);
 	}
 	?start_time(ST);
 	.print("calculation time: ",(system.time-ST)/1000," s");
+	
+	?parent(Parent);
+	?depotID(DepID);
+	.send(Parent,tell,to_work_data([DepID, ToWorkArr]));
 .
 
 

@@ -37,8 +37,8 @@ public class uth_ss_team_Env extends Environment {
 
         super.init(args);
 
-		//LoadFromFile("./uth_ss_team_input_TK_Parts.txt"); // TK
-		LoadFromFile("./uth_ss_team_input_TK.txt"); // TK
+		LoadFromFile("./uth_ss_team_input_TK_Parts.txt"); // TK
+		// LoadFromFile("./uth_ss_team_input_TK.txt"); // TK
 		updatePercepts();
 		
     }
@@ -201,7 +201,7 @@ public class uth_ss_team_Env extends Environment {
 			}
 			
 			String parsed_percept = "parsed(" +s+ "," +direction+ "," +partN+ ")";
-			addPercept("main", Literal.parseLiteral(parsed_percept));
+			addPercept("uth_ss_team_main", Literal.parseLiteral(parsed_percept));
 			
 			res = true;
 		}
@@ -217,9 +217,9 @@ public class uth_ss_team_Env extends Environment {
 			while ((line = br.readLine()) != null) {				
 				String msg = line.substring(1);	
 				if (line.charAt(0) == '+') {
-					addPercept("main", Literal.parseLiteral(msg));
+					addPercept("uth_ss_team_main", Literal.parseLiteral(msg));
 				} else {
-					removePercept("main", Literal.parseLiteral(msg));
+					removePercept("uth_ss_team_main", Literal.parseLiteral(msg));
 				}
 			}
 			br.close();

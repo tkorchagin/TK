@@ -9,7 +9,7 @@ import java.math.*;
 
 public class uth_ss_team_Env extends Environment {
 	
-    private Logger logger = Logger.getLogger("uth_ss_team" + ".mas2j." + uth_ss_team_Env.class.getName());
+    private Logger logger = Logger.getLogger("auctions" + ".mas2j." + uth_ss_team_Env.class.getName());
 	
 	private Integer perceptsDisabled = new Integer(0);
 	
@@ -23,6 +23,7 @@ public class uth_ss_team_Env extends Environment {
 	
 	protected static Term enable_percepts = Literal.parseLiteral("enable_percepts");
     protected static Term disable_percepts = Literal.parseLiteral("disable_percepts");
+	
     protected static boolean envIsOk = false;
 	protected int endCounter = 0;
 	
@@ -36,8 +37,8 @@ public class uth_ss_team_Env extends Environment {
 
         super.init(args);
 
-        // LoadFromFile("data/uth_ss_team/input/uth_ss_team_input.txt");
-        LoadFromFile("./uth_ss_team_input_TK_Parts.txt"); // TK
+		LoadFromFile("./uth_ss_team_input_TK_Parts.txt"); // TK
+		// LoadFromFile("./uth_ss_team_input_TK.txt"); // TK
 		updatePercepts();
 		
     }
@@ -104,7 +105,6 @@ public class uth_ss_team_Env extends Environment {
 			disablePercepts();
 			res = true;
 		} else if (action.getTerm(0).toString().contains("plan_begin")) {
-			// String filename = "data/uth_ss_team/output/team_tell_output.txt";
 			String filename = "./team_tell_output.txt"; // TK
 			try {
 				File file = new File(filename);
@@ -123,23 +123,8 @@ public class uth_ss_team_Env extends Environment {
 				System.out.println(e);
 				res = false;
 			}
-		} else if (action.getFunctor().contains("set_debug_mode")) {
-			Debug_mode = 1;
-			res = true;			
-		}  else if (action.getFunctor().contains("tell")) {
-			//if (Debug_mode == 1) logger.info(action.getTerm(0).toString());
-			String terminator = "\r\n";
-			String line = action.getTerm(0).toString() + terminator;
-			try {
-				BufWriter.write(line);
-				res = true;
-			} catch(Exception e) {
-				System.out.println(e);
-				res = false;
-			}
 		} else if (action.getFunctor().contains("start_writing")) {
-			// String filename = "data/uth_ss_team/output/" + action.getTerm(0).toString()+".csv";
-			String filename = "./" + action.getTerm(0).toString()+".csv"; // TK
+			String filename = "./" + action.getTerm(0).toString()+".txt"; // TK
 
 			try {
 				File file = new File(filename);
@@ -196,111 +181,30 @@ public class uth_ss_team_Env extends Environment {
 				System.out.println(e);
 				res = false;
 			}
-		} else if (action.getFunctor().contains("load_team")) {  
-			// Parsing of team input data and transforming them into Jason format
-			String line,fact,name,mode;
-			String agent = action.getTerm(0).toString();
-			String[] args;
-			int i;
-			try {
-				if ((line = BufReader.readLine()) != null)	{			
-					line = line.replace(',','.');			// two lines needed if csv in prepared in the russian format 
-					line = line.replace(';',',');			// -----//-----//-----//-----//----
-					line = line.replaceAll("[ ]+","");		// -----//-----//-----//-----//----
-					args = line.split(",");  
-					if(args[0].length() !=0) {
-						mode = args[2];
-						if(mode.equals("work")) 
-							fact = "team(id(" + args[0] + "),depot(" + args[1] 
-								+ "),work(will_work(" + args[3] + "),will_rest(" 
-								+ args[4] + ")),state(min_rest(" + args[5] 
-								+ "),work_nights(" + args[6] + "),overtime(" 
-								+ args[7] + ")))";
-						else if (mode.equals("rest")) 
-							fact = "team(id(" + args[0] + "),depot(" + args[1] 
-								+ "),rest(past_rest(" + args[3] + "),will_rest(" 
-								+ args[4] + ")),state(min_rest(" + args[5] 
-								+ "),work_nights(" + args[6] + "),overtime(" 
-								+ args[7] + ")))";
-						else if (mode.equals("vacation")) 
-							fact = "team(id(" + args[0] + "),depot(" + args[1] 
-								+ "),vacation(will_rest(" + args[3] 
-								+ ")),state(min_rest(" + args[4] 
-								+ "),work_nights(" + args[5] + "),overtime(" 
-								+ args[6] + ")))";
-						else  
-							logger.info("Error for team id(" + args[0] 
-									+ "). Unrecognized mode: " + mode);
-							fact = "";
-						addPercept(agent, Literal.parseLiteral(fact));
-						res = true;
-					} else 
-						res = false; 
-				} else  
-					res = false;
-			} catch(Exception e) {
-				System.out.println(e);
-				res = false;
+		} else if (action.getFunctor().contains("parse_string")) {
+			String s = action.getTerm(0).toString();
+			String dir = "dir";
+			String separator = "_";
+			
+			String direction = "";
+			String partN = "";
+			
+			int dir_index = s.indexOf(dir);
+			int separator_index = s.indexOf(separator);
+			
+			if(dir_index != -1 & separator_index != -1){
+				direction = s.substring(dir_index+dir.length(), separator_index);
+				partN = s.substring(separator_index + separator.length());
+			} else {
+				direction = "--";
+				partN = "--";
 			}
-		} else if (action.getFunctor().contains("load_depot")) {  
-			// Parsing of loco input data and transforming them into Jason format
-			String line,fact;
-			String agent = action.getTerm(0).toString();
-			String[] args;
-			try {
-				if ((line = BufReader.readLine()) != null)	{			
-					args = line.split("[;]");  // from CSV file in Russian delimiter is ";"
-// depot (id(Id), period(from(BeginHour),to(EndHour)), norm(Norm), service_type(SType))					
-					if(args[0].length() !=0) {
-						fact = "depot(id(" + args[0] + "),norm(" 
-							+ args[1]  + "),night_start(" + args[2] +  "))";
-						addPercept(agent, Literal.parseLiteral(fact));
-						res = true;
-					} else 
-						res = false; 
-				} else  
-					res = false;
-				
-			} catch(Exception e) {
-				System.out.println(e);
-				res = false;
-			}
-		} else if (action.getFunctor().contains("load_distance")
-				| action.getFunctor().contains("load_station")) {  
-			// Parsing of loco input data and transforming them into Jason format
-			String line,fact;
-			String agent = action.getTerm(0).toString();
-			String act = action.getFunctor();
-			String[] args;
-			try {
-				if ((line = BufReader.readLine()) != null)	{			
-
-					line = line.replace(',','.');			// two lines needed if csv in prepared in the russian format 
-					line = line.replace(';',',');			// -----//-----//-----//-----//----
-					line = line.replaceAll("[ ]+","");		// -----//-----//-----//-----//----
-					args = line.split(",");  
-
-
-					if(args[0].length() !=0) {
-						if(act.contains("load_distance")) {
-							fact = "duration(track(station(" + args[0] + "),station(" + args[1]  + ")),"
-										+ args[2] +  ")";
-						} else {
-							fact = "station(" + args[0] + ",belongs(" + args[1]  + ","
-								+ args[2] + "," + args[3]  + "," + args[4] + "))";
-						}
-						addPercept(agent, Literal.parseLiteral(fact));
-						res = true;
-					} else 
-						res = false; 
-				} else  
-					res = false;
-				
-			} catch(Exception e) {
-				System.out.println(e);
-				res = false;
-			}
-		} 
+			
+			String parsed_percept = "parsed(" +s+ "," +direction+ "," +partN+ ")";
+			addPercept("uth_ss_team_main", Literal.parseLiteral(parsed_percept));
+			
+			res = true;
+		}
 		updatePercepts();
 		return res;
     }
