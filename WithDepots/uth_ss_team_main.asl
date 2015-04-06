@@ -6,7 +6,7 @@
 
 +!start <-
 	+start_time(system.time);
-	.print("main started");
+	.print("depot started");
 	
 	!send_data_to_depots;
 .	
@@ -16,41 +16,49 @@
 <-
 	.my_name(MyName);
 	.print(send_data_to_depots);
-	.findall(DepotID,
-		part_direction_norm(direction(DirID),depot(_), part_norms(_)),
+	.findall(DepID,
+		part_direction_norm(direction(_),depot(DepID), part_norms(_)),
 			DepotsArr);
 			
 	for(.member(DepotID, DepotsArr)){
+		//.print(DepotID);
 		!get_dep_name(DepotID, DepName);
 		.create_agent(DepName, "./uth_ss_team_depot.asl");
 		.send(DepName,tell,depotID(DepotID));
 		.send(DepName,tell,parent(MyName));
-		.print(send(DepName,tell,parent(MyName)));
+		//.print(send(DepName,tell,parent(MyName)));
+		?start_plan_hour(DC);
+		.send(DepName,tell,start_plan_hour(DC));
 
-		.findall(part_direction_norm(_, depot(DepotID), _), 
-			part_direction_norm(_, depot(DepotID), _), PartDirectionDorms);
+		.findall(part_direction_norm(direction(D), depot(DepotID), part_norms(PARR)), 
+			part_direction_norm(direction(D), depot(DepotID), part_norms(PARR)), PartDirectionDorms);
 		.send(DepName,tell,PartDirectionDorms);
-		.print(send(DepName,tell,PartDirectionDorms));
+		//.print(send(DepName,tell,PartDirectionDorms));
+		
+		.findall(team(id(TID),depot(DepotID),MODE,STATE),
+			team(id(TID),depot(DepotID),MODE,STATE), TeamsModeStateArr);
+		.send(DepName,tell,TeamsModeStateArr);
+		//.print(send(DepName,tell,TeamsModeStateArr));
 		
 		.findall(DirID,
 			part_direction_norm(direction(DirID),depot(DepotID), _),
 				DirectinsArr);
 		
 		for(.member(DirectionID, DirectinsArr)){
-			.findall(team_allowed(team(_),direction(DirectionID)),
-				team_allowed(team(_),direction(DirectionID)), AllowedTeamsArr);
-			.findall(buffer(direction(DirectionID),time(_)),
-				buffer(direction(DirectionID),time(_)), Buffers);
+			.findall(team_allowed(team(T),direction(DirectionID)),
+				team_allowed(team(T),direction(DirectionID)), AllowedTeamsArr);
+			.findall(buffer(direction(DirectionID),time(TIME)),
+				buffer(direction(DirectionID),time(TIME)), Buffers);
 			
 			.send(DepName,tell,AllowedTeamsArr);
-			.print(send(DepName,tell,AllowedTeamsArr));
+			//.print(send(DepName,tell,AllowedTeamsArr));
 			
 			.send(DepName,tell,Buffers);
-			.print(send(DepName,tell,Buffers));
+			//.print(send(DepName,tell,Buffers));
 		}
 		
 		.send(DepName,achieve,start);
-		.print(send(DepName,achieve,start));
+		//.print(send(DepName,achieve,start));
 	}
 .
 
@@ -64,6 +72,7 @@
 
 +to_work_data([DepID, ToWorkArr])
 <-
+	//.print(ToWorkArr);
 	for(.member(to_work(id(Source), direction(DirID), work_from(WorkFrom), call_type(CFlag)),
 			ToWorkArr)){
 		.puts("dep_#{DepID}; to_work(id(#{Source}), direction(#{DirID}), work_from(#{WorkFrom}), call_type(#{CFlag}))");

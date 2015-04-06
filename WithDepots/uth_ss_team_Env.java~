@@ -182,17 +182,15 @@ public class uth_ss_team_Env extends Environment {
 				res = false;
 			}
 		} else if (action.getFunctor().contains("parse_string")) {
-			// dep2000037816_dir21_7
-			String agent_name = action.getTerm(0).toString();
-			String s = action.getTerm(1).toString();
+			String s = action.getTerm(0).toString();
 			String dir = "dir";
 			String separator = "_";
 			
 			String direction = "";
 			String partN = "";
 			
-			int dir_index = s.lastIndexOf(dir);
-			int separator_index = s.lastIndexOf(separator);
+			int dir_index = s.indexOf(dir);
+			int separator_index = s.indexOf(separator);
 			
 			if(dir_index != -1 & separator_index != -1){
 				direction = s.substring(dir_index+dir.length(), separator_index);
@@ -203,7 +201,7 @@ public class uth_ss_team_Env extends Environment {
 			}
 			
 			String parsed_percept = "parsed(" +s+ "," +direction+ "," +partN+ ")";
-			addPercept(agent_name, Literal.parseLiteral(parsed_percept));
+			addPercept("uth_ss_team_main", Literal.parseLiteral(parsed_percept));
 			
 			res = true;
 		}

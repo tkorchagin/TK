@@ -41,7 +41,12 @@ crosscost(source(t4),sink(r2),cost(1)).
 	//!add_fake_source;
 	.print("finished processing");
 	
-	.create_agent(tp,"src/transportation.asl");
+	?depotID(DepotID);
+	.print(DepotID);
+	!get_tp_name(DepotID, TpName);
+	+tpName(TpName);
+	
+	.create_agent(TpName,"src/transportation.asl");
 	.findall(source(id(ID),exceed(CAP)), source(id(ID),exceed(CAP)), Sources);
 	.findall(sink(id(Id),need(Cap)), sink(id(Id),need(Cap)),Sinks);
 	.findall(crosscost(source(Id1),sink(Id2),cost(Cost)),
@@ -50,25 +55,25 @@ crosscost(source(t4),sink(r2),cost(1)).
 	.length(Sources,Nsources);
 	.length(Sinks,Nsinks);
 	.length(Costs,Ncosts);
-	.send(tp,tell,[nsources(Nsources),
+	.send(TpName,tell,[nsources(Nsources),
 		nsinks(Nsinks),
 		ncosts(Ncosts),
 		parent(MyName)]);
 	
-	.send(tp,tell,Sources);
-	.print(send(tp,tell,Sources));
+	.send(TpName,tell,Sources);
+	//.print(send(TpName,tell,Sources));
 	
-	.send(tp,tell,Sinks);
-	.print(send(tp,tell,Sinks));
+	.send(TpName,tell,Sinks);
+	//.print(send(TpName,tell,Sinks));
 	
-	.send(tp,tell,Costs);
-	.print(send(tp,tell,Costs));
+	.send(TpName,tell,Costs);
+	//.print(send(TpName,tell,Costs));
 	
-	.send(tp,tell,epsilon_factor(100));
-	.print(send(tp,tell,epsilon_factor(100)));
+	.send(TpName,tell,epsilon_factor(100));
+	//.print(send(TpName,tell,epsilon_factor(100)));
 	
-	.send(tp,achieve,start);
-	.print(send(tp,achieve,start));
+	.send(TpName,achieve,start);
+	//.print(send(TpName,achieve,start));
 .	
 
 
@@ -109,7 +114,7 @@ crosscost(source(t4),sink(r2),cost(1)).
 		 & team(id(TeamID), _, Mode, State), TeamList);
 	.print("findall finished");
 	
-	.print(TeamList);
+	//.print(TeamList);
 	
 	!set_max_buff;
 	
@@ -122,7 +127,7 @@ crosscost(source(t4),sink(r2),cost(1)).
 		for(.member(part(DirID,PartNorms),PartInfoList)){
 			for(.member([PartNumber, PartNorm], PartNorms)){
 				if(PartNorm > 0){
-					!get_p_name(DirID, PartNumber, PartID);
+					!get_p_name(DepotID, DirID, PartNumber, PartID);
 					!count_cost_partN(TeamID, PartNumber, Mode, State, CostTeamPart);
 					+crosscost(source(TeamID), sink(PartID), 
 						cost(CostTeamPart + CostTeamDir));
@@ -146,6 +151,13 @@ crosscost(source(t4),sink(r2),cost(1)).
 			+crosscost(source(TeamID), sink(Fakepart), cost(Inf));
 		}
 	}
+.
+
+
++!get_tp_name(DepotID, TpName)
+<-
+	.concat("tp_dep", DepotID, TpSTR);
+	.term2string(TpName, TpSTR);
 .
 
 
@@ -359,14 +371,22 @@ crosscost(source(t4),sink(r2),cost(1)).
 	
 	?parent(Parent);
 	?depotID(DepID);
+	?toWorkArr(ToWorkArr);
 	.send(Parent,tell,to_work_data([DepID, ToWorkArr]));
 .
 
 
 +!get_dirid_partn_worktime(TeamID, Sink, DirID, PartN, WorkFrom, CFlag)
 <-
-	parse_string(Sink);
+	//dep2000037816_dir21_7
+	.print(sink, " ", Sink);
+	
+	.my_name(MyName);
+	//.print(MyName);
+	parse_string(MyName, Sink);
+	
 	?parsed(Sink, DirID, PartN);
+	//.print(parsed(Sink, DirID, PartN));
 	?team_fact_add(TeamID, FactStartTime, AddStartTime);
 	
 	//.print(team_fact_add(TeamID, FactStartTime, AddStartTime));
