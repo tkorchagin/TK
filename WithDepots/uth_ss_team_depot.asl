@@ -35,14 +35,14 @@ crosscost(source(t4),sink(r2),cost(1)).
 <-
 	.my_name(MyName);
 	+start_time(system.time);
-	.print("main started");
+	.print("depot started");
 	
 	!process_data;
 	//!add_fake_source;
 	.print("finished processing");
 	
 	?depotID(DepotID);
-	.print(DepotID);
+	//.print(DepotID);
 	!get_tp_name(DepotID, TpName);
 	+tpName(TpName);
 	
@@ -345,7 +345,7 @@ crosscost(source(t4),sink(r2),cost(1)).
 
 
 +totals(util(TotU),cost(TotC),steps(TotS)) 
-	<-
+<-
 	.print("Total utility: ",TotU);
 	.print("Total cost: ",TotC);
 	.print("Total steps: ",TotS);
@@ -379,7 +379,7 @@ crosscost(source(t4),sink(r2),cost(1)).
 +!get_dirid_partn_worktime(TeamID, Sink, DirID, PartN, WorkFrom, CFlag)
 <-
 	//dep2000037816_dir21_7
-	.print(sink, " ", Sink);
+	//.print(sink, " ", Sink);
 	
 	.my_name(MyName);
 	//.print(MyName);

@@ -1,4 +1,4 @@
-debug.
+//debug.
 //opdebug.
 //nokill.
 
@@ -8,6 +8,9 @@ freesend.
 weight(1).
 
 epsilon_factor(10).
+//oclass_path("src/asl/util/tp/object_class.asl").
+//pclass_path("src/asl/util/tp/person_class.asl").
+
 oclass_path("src/object_class.asl").
 pclass_path("src/person_class.asl").
 
@@ -17,7 +20,7 @@ person_prefix("p").
 object_prefix("o").
 
 
-version("Version 5.1 by 18/03/2015. A.Takmazian. Programpark. Moscow.").
+version("Version 5.4 by 31/03/2015. A.Takmazian. Programpark. Moscow.").
 
 /*
 
@@ -31,7 +34,11 @@ Version 4.2.1 : 	1) Double inversion of NewBidProfits eliminated
 
 Version 5.0: You Can Specify Allowed Sources for Each Sink    
 Version 5.1: Allowed Sources for Each Sink is specified by presence of "crosscost" belief (18/03/2015)    
-
+Version 5.2 by 19/03/2015: Source/Sink Capacty may be <= 0. In that case it won't be included in the calculation. 
+Version 5.3 by 30/03/2015: Bug "get_multi_head(_,[],[])" is fixed 
+Version 5.4 by 31/03/2015: 
+				1) pclass: put_into_queue no more uses !check stopper
+				2) pclass: run(Id) uses no more !check stopper
 
 This routine implements solution of the 
 Trasportation Problem described at 
@@ -98,7 +105,6 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 	!check(.count(source(_,_),Nsources) & nsources(Nsources));
 	!check(.count(sink(_,_),Nsinks) & nsinks(Nsinks));
 	!check(.count(crosscost(_,_,_),Ncosts) & ncosts(Ncosts));
-	.print("Start check passed");
 .
 
 
@@ -120,34 +126,32 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 .	
 
 +!start <-
-	.print(started);
 	!iterate_step;
 	!check_start;
 	
 	
 	
-	.findall(N,sink(_,need(N)),SinkVols);
-	.findall(N,source(_,exceed(N)),SourceVols);
+	.findall(N,sink(_,need(N)) & N > 0,SinkVols);
+	.findall(N1,source(_,exceed(N1)) & N1 > 0,SourceVols);
 	
 
 	TotSinks = math.sum(SinkVols);
 	.length(SinkVols,Nsinks);
-	//-+nsinks(Nsinks);
 	if(Nsinks <= 0) {
 		!stop("total sinks <= 0");
 	}
 	TotSources = math.sum(SourceVols);
 	.length(SourceVols,Nsources);
-	//-+nsources(Nsources);
 	if(Nsources <= 0) {
 		!stop("total sources <= 0");
 	}
-	.min(SourceVols,MinSourceVol);
+	
+	/*.min(SourceVols,MinSourceVol);
 	.min(SinkVols,MinSinkVol);
 	
 	if(MinSourceVol <=0 | MinSinkVol <=0) {
 		!stop("One or more of capacities <= 0");
-	}
+	}*/
 	
 	.findall(Id,source(id(Id),_),AllSources);
 	
@@ -158,9 +162,11 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		-+direction(direct);
 		-+nperson_classes(Nsources);
 		-+nobject_classes(Nsinks);
-		.findall(pclass(Id,N),source(id(Id),exceed(N)),PersonClasses);
-		.findall(oclass(Id,N),sink(id(Id),need(N)),ObjectClasses);
-		.findall(pocost(I,J,Cost), crosscost(source(I),sink(J),cost(Cost)),
+		.findall(pclass(Id,N),source(id(Id),exceed(N)) & N > 0,PersonClasses);
+		.findall(oclass(Id,N),sink(id(Id),need(N)) & N > 0,ObjectClasses);
+		.findall(pocost(I,J,Cost), crosscost(source(I),sink(J),cost(Cost))
+				& .member(pclass(I,_), PersonClasses) 
+				& .member(oclass(J,_), ObjectClasses) ,
 				POCosts);
 		-+pclasses(PersonClasses);
 		-+oclasses(ObjectClasses);
@@ -171,9 +177,11 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		-+direction(reverse);
 		-+nperson_classes(Nsinks);
 		-+nobject_classes(Nsources);
-		.findall(pclass(Id,N),sink(id(Id),need(N)),PersonClasses);
-		.findall(oclass(Id,N),source(id(Id),exceed(N)),ObjectClasses);
-		.findall(pocost(I,J,Cost), crosscost(source(J),sink(I),cost(Cost)),
+		.findall(pclass(Id,N),sink(id(Id),need(N)) & N > 0,PersonClasses);
+		.findall(oclass(Id,N),source(id(Id),exceed(N)) & N > 0,ObjectClasses);
+		.findall(pocost(I,J,Cost), crosscost(source(J),sink(I),cost(Cost))
+				& .member(pclass(I,_), PersonClasses) 
+				& .member(oclass(J,_), ObjectClasses) ,
 				POCosts);
 		-+pclasses(PersonClasses);
 		-+oclasses(ObjectClasses);
@@ -268,8 +276,6 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 	!wait(finished_object_classes_round);
 		
 	+inwork;
-	.print("Agent ready");
-	.wait(1000);
 	!send(PClasses,achieve,start);
 .
 
@@ -295,7 +301,7 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		?weight(Weight);
 		?nperson_classes(Dim);
 		Share = Weight / (N+Dim);
-		.send(Recip,achieve,addweight(Share));	 // share the weight with recipients
+		.send(Recip,achieve,addweight(Share));	// share the weight with recipients
 		!addweight(-N*Share);
 .
 

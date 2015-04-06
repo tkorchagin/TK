@@ -5,7 +5,7 @@ freesend.
 freeadd.
 inf(1000000).
 
-check_timeout(50000).
+check_timeout(15000).
 
 prices_processed(0).
 prices_received(0).
@@ -57,6 +57,7 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 +!sleep <-
 	?weight(Weight);
 	-+weight(0);
+	+sleep(system.time);
 	if(Weight > 0) {
 		?main(Main);
 		.send(Main,achieve,addweight(Weight));
@@ -76,7 +77,7 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 
 
 // for outer calls
-+!addweight(S)[source(Source)] //: Source \== self 
++!addweight(S)[source(Source)] : Source \== self 
 	<-
 	!addweight(S);
 	.send(Source,tell,added);
@@ -102,7 +103,7 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 	+freesend;
 .
 
-+!send(Recip,Mode,Message) 
++!send(Recip,Mode,Message) : not .list(Recip)
 	<-
 	!check(freesend);
 	.abolish(freesend);
@@ -134,7 +135,7 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 	.my_name(MyName);
 	?myclassCapacity(Capacity);
 	
-	if(not price(_,OldFlow,MyName,OClass)) {OldFlow = 0};
+	? price(_,OldFlow,MyName,OClass) | OldFlow = 0; 
 		// calculate how many members of PClass was 
 		// disposed in this OClass before 
 
@@ -148,7 +149,10 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 		}
 		if(PClassAgent == MyName) {
 			-+not_assigned(NotAssigned + OldFlow - Flow);	
-				// will work even if Flow = 0
+			if(debug) {
+				+history_not_assigned(NotAssigned + OldFlow - Flow,system.time);
+			}
+							// will work even if Flow = 0
 		}
 	}
 .
@@ -185,12 +189,34 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 		?prices_processed(TokProc);
 		+token_history(proc(TokProc),rec(TokRec),source(Object));
 	}
-	!check(prices_processed(TokRec-1),10000); 
+	+in_queue(TokRec);
+.
+
++in_queue(TokRec) : prices_processed(TokRec-1)  <-
+!go_run(TokRec).
+
++prices_processed(TokRec): in_queue(TokRec+1) <-
+   !go_run(TokRec+1).
+
+
+
+
++prices_processed(A) : prices_received(A)  & A > 0  
+	<-
+		!sleep;
+		+sleep(system.time);
+		+prices_processed(A,system.time);
+.	
+
+   
++!go_run(TokRec) <-
 	-+localstep(0);
+	+current_run(TokRec);
 	!run(TokRec);
-	-+prices_processed(TokRec);			// release
 .
 	
+
+
 +!getshare <-
 	?main(Main);
 	.send(Main,askOne,share_weight(Share),share_weight(Share));
@@ -351,22 +377,27 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 								bid(Bid));
 			}
 		}
-
-		!check(bids_processed(Step));
 	}
-	!iterate_step;
-	!run(Id);
 .
 
 
++bids_processed(Step) <-
+	!iterate_step;
+	?current_run(Id);
+	!run(Id);
+.
+
 +!run(Id) <- 
 	!print(sleep(Id));
-	!sleep;
+	//!sleep;
 	!iterate_step;
 	if(debug) {
 		+finished(Id,system.time);
 	}
+	-+prices_processed(Id); // release
+	.abolish(current_run(_));
 .
+
 
 
 @fsdkjhkjs[atomic]

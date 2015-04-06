@@ -1,4 +1,4 @@
-debug.
+//debug.
 //opdebug.
 
 freesend.
@@ -33,7 +33,7 @@ get_multi_head(Quantity,[[Bid,Flow,PClass] | Tail],
 	Flow > Quantity
 	& nullate(Tail, NullTail, RefusalList).
 
-nullate([], [], []).	
+nullate([], [], []) :- true.	
 nullate([[_,_,PClass] | Tail], 
 	[[0,0,PClass] | NullTail], 
 	[PClass | RefusalTail]) 
@@ -98,7 +98,7 @@ nullate([[_,_,PClass] | Tail],
 .
 
 
-+!send(Recip,Mode,Message) 
++!send(Recip,Mode,Message) : not .list(Recip)
 		<-
 		!check(freesend);
 		.abolish(freesend);
@@ -198,6 +198,7 @@ nullate([[_,_,PClass] | Tail],
 +bids_processed(A) : bids_received(A)  & A > 0  
 	<-
 		!sleep;
+		+sleep(system.time);
 		//!wait(added[source(Main)]); 
 .	
 
