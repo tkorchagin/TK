@@ -21,45 +21,59 @@
 			DepotsArr);
 			
 	for(.member(DepotID, DepotsArr)){
-		//.print(DepotID);
 		!get_dep_name(DepotID, DepName);
-		.create_agent(DepName, "./uth_ss_team_depot.asl");
-		.send(DepName,tell,depotID(DepotID));
-		.send(DepName,tell,parent(MyName));
-		//.print(send(DepName,tell,parent(MyName)));
-		?start_plan_hour(DC);
-		.send(DepName,tell,start_plan_hour(DC));
-
-		.findall(part_direction_norm(direction(D), depot(DepotID), part_norms(PARR)), 
-			part_direction_norm(direction(D), depot(DepotID), part_norms(PARR)), PartDirectionDorms);
-		.send(DepName,tell,PartDirectionDorms);
-		//.print(send(DepName,tell,PartDirectionDorms));
-		
-		.findall(team(id(TID),depot(DepotID),MODE,STATE),
-			team(id(TID),depot(DepotID),MODE,STATE), TeamsModeStateArr);
-		.send(DepName,tell,TeamsModeStateArr);
-		//.print(send(DepName,tell,TeamsModeStateArr));
-		
-		.findall(DirID,
-			part_direction_norm(direction(DirID),depot(DepotID), _),
-				DirectinsArr);
-		
-		for(.member(DirectionID, DirectinsArr)){
-			.findall(team_allowed(team(T),direction(DirectionID)),
-				team_allowed(team(T),direction(DirectionID)), AllowedTeamsArr);
-			.findall(buffer(direction(DirectionID),time(TIME)),
-				buffer(direction(DirectionID),time(TIME)), Buffers);
+		!create_agent(DepName,"./uth_ss_team_depot.asl", Flag);
+		if (Flag = true){
+			//.print(DepotID);
+			.send(DepName,tell,depotID(DepotID));
+			.send(DepName,tell,parent(MyName));
 			
-			.send(DepName,tell,AllowedTeamsArr);
-			//.print(send(DepName,tell,AllowedTeamsArr));
+			//.print(send(DepName,tell,parent(MyName)));
+			?start_plan_hour(DC);
+			.send(DepName,tell,start_plan_hour(DC));
+	
+			.findall(part_direction_norm(direction(D), depot(DepotID), part_norms(PARR)), 
+				part_direction_norm(direction(D), depot(DepotID), part_norms(PARR)), PartDirectionDorms);
+			.send(DepName,tell,PartDirectionDorms);
+			.print(send(DepName,tell,PartDirectionDorms));
 			
-			.send(DepName,tell,Buffers);
-			//.print(send(DepName,tell,Buffers));
+			.findall(team(id(TID),depot(DepotID),MODE,STATE),
+				team(id(TID),depot(DepotID),MODE,STATE), TeamsModeStateArr);
+			.send(DepName,tell,TeamsModeStateArr);
+			.print(send(DepName,tell,TeamsModeStateArr));
+			
+			.findall(DirID,
+				part_direction_norm(direction(DirID),depot(DepotID), _),
+					DirectinsArr);
+			
+			for(.member(DirectionID, DirectinsArr)){
+				.findall(team_allowed(team(T),direction(DirectionID)),
+					team_allowed(team(T),direction(DirectionID)), AllowedTeamsArr);
+				.findall(buffer(direction(DirectionID),time(TIME)),
+					buffer(direction(DirectionID),time(TIME)), Buffers);
+				
+				.send(DepName,tell,AllowedTeamsArr);
+				//.print(send(DepName,tell,AllowedTeamsArr));
+				
+				.send(DepName,tell,Buffers);
+				//.print(send(DepName,tell,Buffers));
+			}
+			
+			.send(DepName,achieve,start);
+			//.print(send(DepName,achieve,start));
 		}
-		
-		.send(DepName,achieve,start);
-		//.print(send(DepName,achieve,start));
 	}
+.
+
++!create_agent(Name,Path,Flag)
+<-
+	.all_names(AllNames);
+	if(not .member(Name,AllNames)) {
+		.create_agent(Name,Path);
+		Flag = true;
+	} else {
+		Flag = false;
+	}	
 .
 
 

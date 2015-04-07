@@ -5,7 +5,9 @@ freesend.
 freeadd.
 inf(1000000).
 
-check_timeout(15000).
+check_delay(100).
+check_timeout(20000).
+check_delay(30).
 
 prices_processed(0).
 prices_received(0).
@@ -54,10 +56,18 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 +myclassCapacity(Capacity) <- +not_assigned(Capacity).
 
 
+@aefwedf[atomic]
++!halt[source(Sender)] <-
+	.drop_all_desires;
+	.drop_all_events;
+	.send(Sender,tell,pclass_halted);
+.
+
+
 +!sleep <-
 	?weight(Weight);
 	-+weight(0);
-	+sleep(system.time);
+	if(debug){+sleep(system.time)};
 	if(Weight > 0) {
 		?main(Main);
 		.send(Main,achieve,addweight(Weight));
@@ -213,6 +223,7 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 	-+localstep(0);
 	+current_run(TokRec);
 	!run(TokRec);
+
 .
 	
 
@@ -382,10 +393,12 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 
 
 +bids_processed(Step) <-
+
 	!iterate_step;
 	?current_run(Id);
 	!run(Id);
 .
+
 
 +!run(Id) <- 
 	!print(sleep(Id));
@@ -426,7 +439,7 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 	<-
 	?step(Step);
 	-+step(Step+1);
-	.print(step(Step+1));
+	!print(step(Step+1));
 	?localstep(LocStep);
 	?localmaxstep(MaxStep);
 	if(LocStep < MaxStep) {
@@ -463,28 +476,32 @@ get_multi_head(Quantity,[H|A],[H|B]) :-
 	?step(Steps);
 .
 	
+
 +!check(A) 
 	<-
 	?check_timeout(ChTO);
 	!check(A,ChTO);
 .	
 
+
 +!check(A,_) : A <- -timing(A,_).
 +!check(A,ChTO) <- 
 	if(timing(A,StartTime)) {
-		?check_timeout(ChTO);
-		(system.time - StartTime) < ChTO;
+
+		if (system.time - StartTime > ChTO) {
+			.concat("Check of ",A," has reached timeout ",ChTO,"ms. ",
+				Message);
+			!stop(Message);
+		};
 	} else {
 		+timing(A,system.time);
 	}
-	.wait(10); 
-	!check(A).
+	?check_delay(ChDel);
+	.wait(ChDel); 
+	!check(A,ChTO).
 
--!check(A,ChTO) <-
-	.concat("Check of ",A," has reached timeout ",ChTO,"ms. ",
-			Message);
-	!stop(Message).
-	
+
+
 +!stop(A) <-
 	.print(A);
 	.print("WILL STOP IN 100 sec");

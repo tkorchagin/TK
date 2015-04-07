@@ -7,20 +7,25 @@ sent(0).
 freesend.
 weight(1).
 
-epsilon_factor(10).
-//oclass_path("src/asl/util/tp/object_class.asl").
-//pclass_path("src/asl/util/tp/person_class.asl").
 
+check_timeout(20000).
+check_delay(30).
+
+
+epsilon_factor(100).
 oclass_path("src/object_class.asl").
 pclass_path("src/person_class.asl").
 
+//oclass_path("object_class.asl").
+//pclass_path("person_class.asl").
+
 //////// Bertsekas algorithm
 
-person_prefix("p").
-object_prefix("o").
+person_prefix("uth_util_tp_person_").
+object_prefix("uth_util_tp_object_").
 
 
-version("Version 5.4 by 31/03/2015. A.Takmazian. Programpark. Moscow.").
+version("Version 6.0 by 31/03/2015. A.Takmazian. Programpark. Moscow.").
 
 /*
 
@@ -36,7 +41,7 @@ Version 5.0: You Can Specify Allowed Sources for Each Sink
 Version 5.1: Allowed Sources for Each Sink is specified by presence of "crosscost" belief (18/03/2015)    
 Version 5.2 by 19/03/2015: Source/Sink Capacty may be <= 0. In that case it won't be included in the calculation. 
 Version 5.3 by 30/03/2015: Bug "get_multi_head(_,[],[])" is fixed 
-Version 5.4 by 31/03/2015: 
+Version 6.0 by 31/03/2015: 
 				1) pclass: put_into_queue no more uses !check stopper
 				2) pclass: run(Id) uses no more !check stopper
 
@@ -105,6 +110,7 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 	!check(.count(source(_,_),Nsources) & nsources(Nsources));
 	!check(.count(sink(_,_),Nsinks) & nsinks(Nsinks));
 	!check(.count(crosscost(_,_,_),Ncosts) & ncosts(Ncosts));
+	.print("data gathered");
 .
 
 
@@ -232,6 +238,12 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		.findall(PClassCost,
 			.member(pocost(PClass,_,PClassCost),POCosts) 
 			,PClassCosts);
+			
+		if(PClassCosts == []) {
+		 	.concat("Class ",PClass," has no costs",Msg1);
+			!stop(Msg1);
+		}
+		
 		.max(PClassCosts,MaxPClassCost);
 		.length(PClassCosts,MyNOClasses);
 		Eps = MaxPClassCost / EpsFact;
@@ -276,6 +288,7 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 	!wait(finished_object_classes_round);
 		
 	+inwork;
+	.print(calculation_start);
 	!send(PClasses,achieve,start);
 .
 
@@ -296,48 +309,48 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 
 @eswnefs90[atomic]
 +!sent_handle(N,Recip) <- 
-		?sent(Sent);
-		-+sent(Sent+N);
-		?weight(Weight);
-		?nperson_classes(Dim);
-		Share = Weight / (N+Dim);
-		.send(Recip,achieve,addweight(Share));	// share the weight with recipients
-		!addweight(-N*Share);
+	?sent(Sent);
+	-+sent(Sent+N);
+	?weight(Weight);
+	?nperson_classes(Dim);
+	Share = Weight / (N+Dim);
+	.send(Recip,achieve,addweight(Share));	// share the weight with recipients
+	!addweight(-N*Share);
 .
 
 
 @eswneasafs90[atomic]
 +?share_weight(Share) <- 
-		?weight(Weight);
-		?nperson_classes(Dim);
-		Share = Weight / (1+Dim);
-		!addweight(-Share);
+	?weight(Weight);
+	?nperson_classes(Dim);
+	Share = Weight / (1+Dim);
+	!addweight(-Share);
 .
 
 
 +!send(Recip,Mode,Message) : .list(Recip)
-		<-
-		!check(freesend);
-		.abolish(freesend);
-		.length(Recip,N);
-		!sent_handle(N,Recip);		
-		for(.member(Agent,Recip)) {
-			!check(added[source(Agent)]);
-		}
-		.abolish(added[source(Agent)] & .member(Agent,Recip));
-		.send(Recip,Mode,Message);
-		+freesend;
+	<-
+	!check(freesend);
+	.abolish(freesend);
+	.length(Recip,N);
+	!sent_handle(N,Recip);		
+	for(.member(Agent,Recip)) {
+		!check(added[source(Agent)]);
+	}
+	.abolish(added[source(Agent)] & .member(Agent,Recip));
+	.send(Recip,Mode,Message);
+	+freesend;
 .
 
 
 +!send(Recip,Mode,Message) 
 		<-
-		!check(freesend);
-		.abolish(freesend);
-		!sent_handle(1,Recip);
-		!wait(added[source(Recip)]);		
-		.send(Recip,Mode,Message);
-		+freesend;
+	!check(freesend);
+	.abolish(freesend);
+	!sent_handle(1,Recip);
+	!wait(added[source(Recip)]);		
+	.send(Recip,Mode,Message);
+	+freesend;
 .
 
 
@@ -354,7 +367,7 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		+finished(Step);
 	}
 	?object_classes(ObjectClasses);
-	//.send(ObjectClasses,achieve,output);
+	.send(ObjectClasses,achieve,finish);
 	-finished_person_classes;
 	?person_classes(PersonClasses);
 	.send(PersonClasses,askOne,results(_));
@@ -362,10 +375,10 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 
 @sfdjn234vru[atomic]
 +person_class_end[_] : 
-		.count(person_class_end[_],N) & nperson_classes(N)
-		<-
-		.abolish(person_class_end);
-		+finished_person_classes_round;  
+	.count(person_class_end[_],N) & nperson_classes(N)
+	<-
+	.abolish(person_class_end);
+	+finished_person_classes_round;  
 .
 
 
@@ -401,13 +414,18 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 
 //control passed by this belief to get out from atomic flow here
 +finished_person_classes_output(Step) <- 
-	.print(run_no(Step));
+	.puts("Run number #{Step} finished");
+	//.abolish(object_finished_work);
 	!finish;
 .
 
 +!finish <-
+	!check(.count(object_finished_work[_],N) 
+					& nobject_classes(N));
 	if(not nokill) {
 		!kill_object_classes; 
+		?step(Step);
+		!wait(finished_person_classes_output(Step));
 		!kill_person_classes;
 	}
 	!calculate_streams(Streams);
@@ -420,30 +438,48 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 .
 
 
-@adbfns4567bdmv[atomic]
+// outer call to kill all activities
++!force_kill <-
+
+	.drop_all_desires;
+	.drop_all_events;
+	
+	!kill_object_classes;
+	!kill_person_classes;
+	!clear_all_data;
+
+	?parent(Parent);
+	.send(Parent,tell,killed);
+.
+
+
 +!kill_object_classes
- : object_classes_created <-
+  <-
 	?object_classes(ObjectClasses);
+	.send(ObjectClasses,achieve,halt);
+	.length(ObjectClasses,N);
+	!check(.count(oclass_halted[_],N));
+	.abolish(oclass_halted);
 	for(.member(Agent,ObjectClasses)) {
 		.kill_agent(Agent);
+		!print(kill_agent(Agent));
 	}
-	-object_classes_created;
 .
 
-+!kill_object_classes.
 
 +!kill_person_classes
- : person_classes_created <-
- 	?step(Step);
- 	!wait(finished_person_classes_output(Step));
+	 <-
 	?person_classes(PClasses);
+	.send(PClasses,achieve,halt);
+	.length(PClasses,N);
+	!check(.count(pclass_halted[_],N));
+	.abolish(pclass_halted);
 	for(.member(Agent,PClasses)) {
 		.kill_agent(Agent);
+		!print(kill_agent(Agent));
 	}
-	-person_classes_created;
 .
 
-+!kill_person_classes.
 
 
 +!calculate_streams(Streams)
@@ -465,23 +501,23 @@ II. totals(util(TotU),cost(TotC),steps(TotS)) -
 		?step(Step);
 		+streams(step(Step),Streams);
 	}
-
 .
 
 
 +!clear_all_data <-
-	!check(debug | (
-		(not object_classes_created) & (not person_classes_created)));		
-			// check that cleanup is finished, before sending the result
 
 	//.abolish(direction(_));
 	.abolish(sink(_,_));
 	.abolish(source(_,_));
-	//.abolish(crosscost(_,_,_));
+	.abolish(crosscost(_,_,_));
 	.abolish(nsinks(_));
 	.abolish(nsources(_));
-	//.abolish(ncosts(_));
+	.abolish(ncosts(_));
 	.abolish(results(_)[_]);
+	.abolish(pclass_halted);
+	.abolish(oclass_halted);
+	-+person_classes([]);
+	-+object_classes([]);
 .
 
 

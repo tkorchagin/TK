@@ -19,7 +19,7 @@ bids_received(0).
 
 dimension(Dim) :- nperson_classes(Dim).
 
-get_multi_head(_,[],[],[]).
+get_multi_head(_,[],[],[]) :- true.	
 
 get_multi_head(Quantity,[H|A],[H|B],RefusalList) :- 
 	H = [_,Flow,_] 
@@ -39,6 +39,15 @@ nullate([[_,_,PClass] | Tail],
 	[PClass | RefusalTail]) 
 	:- 	
 	nullate(Tail, NullTail, RefusalTail).
+
+
+
+@aefwedf[atomic]
++!halt[source(Sender)] <-
+	.drop_all_desires;
+	.drop_all_events;
+	.send(Sender,tell,oclass_halted);
+.
 
 	
 +init <- 
@@ -84,17 +93,22 @@ nullate([[_,_,PClass] | Tail],
 +!send([],_,_).
 
 +!send(Recip,Mode,Message) : .list(Recip)
-		<-
-		!check(freesend);
-		.abolish(freesend);
-		.length(Recip,N);
-		!sent_handle(N,Recip);		
-		for(.member(Agent,Recip)) {
-			!check(added[source(Agent)]);
-		}
-		.abolish(added[source(Agent)] & .member(Agent,Recip));
-		.send(Recip,Mode,Message);
-		+freesend;
+	<-
+	!check(freesend);
+	.abolish(freesend);
+	.length(Recip,N);
+	!sent_handle(N,Recip);		
+	for(.member(Agent,Recip)) {
+		!check(added[source(Agent)]);
+	}
+	.abolish(added[source(Agent)] & .member(Agent,Recip));
+	.send(Recip,Mode,Message);
+	+freesend;
+.
+
++!finish[source(Sender)] <-
+	!check(freesend);
+	.send(Sender,tell,object_finished_work);
 .
 
 

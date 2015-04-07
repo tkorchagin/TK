@@ -211,6 +211,7 @@ crosscost(source(t4),sink(r2),cost(1)).
 		-+team_fact_add(TeamID, FactStartTime, AddStartTime);
 	} else {
 		+team_fact_add(TeamID, FactStartTime, AddStartTime);
+		//.print(team_fact_add(TeamID, FactStartTime, AddStartTime));
 	}
 	
 	if (PartStartTime > FactStartTime) {
@@ -377,10 +378,7 @@ crosscost(source(t4),sink(r2),cost(1)).
 
 
 +!get_dirid_partn_worktime(TeamID, Sink, DirID, PartN, WorkFrom, CFlag)
-<-
-	//dep2000037816_dir21_7
-	//.print(sink, " ", Sink);
-	
+<-	
 	.my_name(MyName);
 	//.print(MyName);
 	parse_string(MyName, Sink);
@@ -388,7 +386,6 @@ crosscost(source(t4),sink(r2),cost(1)).
 	?parsed(Sink, DirID, PartN);
 	//.print(parsed(Sink, DirID, PartN));
 	?team_fact_add(TeamID, FactStartTime, AddStartTime);
-	
 	//.print(team_fact_add(TeamID, FactStartTime, AddStartTime));
 	
 	PartStart = PartN*3;
