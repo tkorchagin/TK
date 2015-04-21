@@ -11,7 +11,6 @@
 	!send_data_to_depots;
 .	
 
-
 +!send_data_to_depots
 <-
 	.my_name(MyName);
@@ -23,6 +22,7 @@
 	for(.member(DepotID, DepotsArr)){
 		!get_dep_name(DepotID, DepName);
 		!create_agent(DepName,"./uth_ss_team_depot.asl", Flag);
+
 		if (Flag = true){
 			//.print(DepotID);
 			.send(DepName,tell,depotID(DepotID));
@@ -33,24 +33,23 @@
 			.send(DepName,tell,start_plan_hour(DC));
 	
 			.findall(part_direction_norm(direction(D), depot(DepotID), part_norms(PARR)), 
-				part_direction_norm(direction(D), depot(DepotID), part_norms(PARR)), PartDirectionDorms);
+					part_direction_norm(direction(D), depot(DepotID), part_norms(PARR)), PartDirectionDorms);
 			.send(DepName,tell,PartDirectionDorms);
-			.print(send(DepName,tell,PartDirectionDorms));
+			//.print(send(DepName,tell,PartDirectionDorms));
 			
 			.findall(team(id(TID),depot(DepotID),MODE,STATE),
-				team(id(TID),depot(DepotID),MODE,STATE), TeamsModeStateArr);
+					team(id(TID),depot(DepotID),MODE,STATE), TeamsModeStateArr);
 			.send(DepName,tell,TeamsModeStateArr);
-			.print(send(DepName,tell,TeamsModeStateArr));
+			//.print(send(DepName,tell,TeamsModeStateArr));
 			
-			.findall(DirID,
-				part_direction_norm(direction(DirID),depot(DepotID), _),
-					DirectinsArr);
+			.findall(DirID, part_direction_norm(direction(DirID),depot(DepotID), _), DirectinsArr);
 			
 			for(.member(DirectionID, DirectinsArr)){
+				//.print(DirectionID);
 				.findall(team_allowed(team(T),direction(DirectionID)),
-					team_allowed(team(T),direction(DirectionID)), AllowedTeamsArr);
+						team_allowed(team(T),direction(DirectionID)), AllowedTeamsArr);
 				.findall(buffer(direction(DirectionID),time(TIME)),
-					buffer(direction(DirectionID),time(TIME)), Buffers);
+						buffer(direction(DirectionID),time(TIME)), Buffers);
 				
 				.send(DepName,tell,AllowedTeamsArr);
 				//.print(send(DepName,tell,AllowedTeamsArr));
@@ -58,7 +57,6 @@
 				.send(DepName,tell,Buffers);
 				//.print(send(DepName,tell,Buffers));
 			}
-			
 			.send(DepName,achieve,start);
 			//.print(send(DepName,achieve,start));
 		}

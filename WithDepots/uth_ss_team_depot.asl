@@ -121,11 +121,12 @@ crosscost(source(t4),sink(r2),cost(1)).
 	for (.member(TeamID,TeamList)){
 		?team(id(TeamID), _, Mode, State);
 		+source(id(TeamID),exceed(1));
-		.print(source(id(TeamID),exceed(1)));
+		//.print(source(id(TeamID),exceed(1)));
 		
 		!count_cost_by_direction(TeamID, CostTeamDir);
 		for(.member(part(DirID,PartNorms),PartInfoList)){
 			for(.member([PartNumber, PartNorm], PartNorms)){
+			//.print([PartNumber, PartNorm]);
 				if(PartNorm > 0){
 					!get_p_name(DepotID, DirID, PartNumber, PartID);
 					!count_cost_partN(TeamID, PartNumber, Mode, State, CostTeamPart);
@@ -180,13 +181,11 @@ crosscost(source(t4),sink(r2),cost(1)).
 		}
 	}
 
-	if (Mode = work(will_work(MoreWorkHours), will_rest(RestHours))){
-		!calc_fact_add_work(MoreWorkHours, RestHours, NightsWorked,
-			FactHours, AddHours);
+	if (Mode = work(will_work(MoreWorkHours), will_rest(RestHours), _)){
+		!calc_fact_add_work(MoreWorkHours, RestHours, NightsWorked, FactHours, AddHours);
 	} else {
 		if (Mode = rest(past_rest(PastRestHours), will_rest(MoreRestHours), _)){
-			!calc_fact_add_rest(PastRestHours, MoreRestHours, NightsWorked,
-				FactHours, AddHours);
+			!calc_fact_add_rest(PastRestHours, MoreRestHours, NightsWorked, FactHours, AddHours);
 		} else {
 			if (Mode = vacation(will_start(TimeStart))){
 				!calc_fact_add_vacation(TimeStart, FactHours);
@@ -198,20 +197,22 @@ crosscost(source(t4),sink(r2),cost(1)).
 	if (.ground(FactHours)) {
 		FactStartTime = 24 - FactHours;
 	} else {
+		.print(TeamID, " FactStartTime ", Mode);
 		FactStartTime = Inf;
 	}
 	
 	if (.ground(AddHours)) {
 		AddStartTime = 24 - AddHours;
 	} else {
+		.print(TeamID, " AddStartTime ", Mode);
 		AddStartTime = Inf;
 	}
 	
 	if (team_fact_add(TeamID, _, _)){
-		-+team_fact_add(TeamID, FactStartTime, AddStartTime);
+		-team_fact_add(TeamID, _, _);
+		+team_fact_add(TeamID, FactStartTime, AddStartTime);
 	} else {
 		+team_fact_add(TeamID, FactStartTime, AddStartTime);
-		//.print(team_fact_add(TeamID, FactStartTime, AddStartTime));
 	}
 	
 	if (PartStartTime > FactStartTime) {
@@ -225,7 +226,6 @@ crosscost(source(t4),sink(r2),cost(1)).
 			CostTeamPart = Inf;
 		}
 	}
-	
 .
 
 
@@ -258,12 +258,15 @@ crosscost(source(t4),sink(r2),cost(1)).
 	//FACT
 	FreeHours = 24 + PrevHours - WorkHours;  // NB - can be > 24!
 	!trunc_hour(24 + PrevHours - WorkHours - RestHours,FactHours);
+	//.print("calc_fact_add_work FactHours", FactHours);
 	
 	// ADD
 	if (NightsWorked == 2) {
 		!get_nonight_hours(FreeHours - MinRestHours,AddHours,AddStart);
+		.print(get_nonight_hours(FreeHours - MinRestHours,AddHours,AddStart));
 	} else {
 		!trunc_hour(FreeHours - MinRestHours,AddHours);
+		//.print(trunc_hour(FreeHours - MinRestHours,AddHours));
 	};
 .
 
@@ -287,6 +290,7 @@ crosscost(source(t4),sink(r2),cost(1)).
 
 	//FACT
 	!trunc_hour(24 + PrevHours - MoreRestHours,FactHours);
+	//.print("calc_fact_add_rest FactHours ", FactHours);
 	
 	// ADD
 	MinMoreRestHours = math.max(0,MinRestHours - PastRestHours);
@@ -305,6 +309,7 @@ crosscost(source(t4),sink(r2),cost(1)).
 	?max_buffer(BufTime);
 	TimeStart = TimeStart1 + BufTime;
 	!trunc_hour(24 - TimeStart,FactHours);
+	//.print("calc_fact_add_vacation FactHours ", FactHours);
 .
 
 
@@ -356,6 +361,7 @@ crosscost(source(t4),sink(r2),cost(1)).
 +transportation_streams(Streams)
 <-
 	+toWorkArr([]);
+	//.print(Streams);
 	
 	for(.member(stream(source(Source),sink(Sink),quantity(Quantity)),
 		Streams)) {
@@ -380,11 +386,9 @@ crosscost(source(t4),sink(r2),cost(1)).
 +!get_dirid_partn_worktime(TeamID, Sink, DirID, PartN, WorkFrom, CFlag)
 <-	
 	.my_name(MyName);
-	//.print(MyName);
 	parse_string(MyName, Sink);
 	
 	?parsed(Sink, DirID, PartN);
-	//.print(parsed(Sink, DirID, PartN));
 	?team_fact_add(TeamID, FactStartTime, AddStartTime);
 	//.print(team_fact_add(TeamID, FactStartTime, AddStartTime));
 	
@@ -392,10 +396,16 @@ crosscost(source(t4),sink(r2),cost(1)).
 	if (PartStart > AddStartTime){
 		if (PartStart > FactStartTime) {
 			WorkFrom = PartStart;
+			CFlag = full_rest;
 		} else {
-			WorkFrom = FactStartTime;
+			if (FactStartTime < 24) {
+				WorkFrom = FactStartTime;
+				CFlag = full_rest;
+			} else {
+				WorkFrom = PartStart;
+				CFlag = cut_rest;
+			}
 		}
-		CFlag = full_rest;
 	} else {
 		WorkFrom = AddStartTime;
 		CFlag = cut_rest;
