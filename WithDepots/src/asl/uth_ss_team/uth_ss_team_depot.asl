@@ -97,7 +97,9 @@ crosscost(source(t4),sink(r2),cost(1)).
 	
 	?depotID(DepotID);
 	for(.member(part(DirID,PartNorms),PartInfoList)){
-		for(.member([PartNumber, PartNorm], PartNorms)){
+		for(.member([PN, PartNorm], PartNorms)){
+			PartNumber = PN - 1;
+			//.print([PN, PartNorm]);
 			if (PartNorm > 0){
 				!get_p_name(DepotID, DirID, PartNumber, PartID);
 				+sink(id(PartID),need(PartNorm));
@@ -176,15 +178,16 @@ crosscost(source(t4),sink(r2),cost(1)).
 	}
 	
 	?infinity(Inf);
+	?planning_horisont(PlanningHorisont);
 	if (.ground(FactHours)) {
-		FactStartTime = 24 - FactHours;
+		FactStartTime = PlanningHorisont - FactHours;
 	} else {
 		.print(TeamID, " FactStartTime ", Mode);
 		FactStartTime = Inf;
 	}
 	
 	if (.ground(AddHours)) {
-		AddStartTime = 24 - AddHours;
+		AddStartTime = PlanningHorisont - AddHours;
 	} else {
 		.print(TeamID, " AddStartTime ", Mode);
 		AddStartTime = Inf;
@@ -199,11 +202,11 @@ crosscost(source(t4),sink(r2),cost(1)).
 	
 	if (PartStartTime > FactStartTime) {
 		?const_fact(Const1);
-		CostTeamPart = (8 - PartNumber + 1) * Const1;
+		CostTeamPart = Const1/(PartNumber + 1);
 	} else {
 		if (PartStartTime > AddStartTime) {
 			?const_add(Const2);
-			CostTeamPart = (8 - PartNumber + 1) * Const2;
+			CostTeamPart = Const2/(PartNumber + 1);
 		} else {
 			CostTeamPart = Inf;
 		}
@@ -230,16 +233,13 @@ crosscost(source(t4),sink(r2),cost(1)).
 	RestHours = RestHours1 + BufTime;
 	MinRestHours = MinRestHours1 + BufTime; 
 	
-	//?start_plan_hour(StartPlanHour);
-	//StartNight = 24 - StartPlanHour;
-	//EndNight = (StartNight + 5) mod 24;
-	
 	?start_time(StartTime);
 	!hours_to_end(StartTime, PrevHours);
 	
 	//FACT
-	FreeHours = 24 + PrevHours - WorkHours;  // NB - can be > 24!
-	!trunc_hour(24 + PrevHours - WorkHours - RestHours,FactHours);
+	?planning_horisont(PlanningHorisont);
+	FreeHours = PlanningHorisont + PrevHours - WorkHours;  // NB - can be > 24!
+	!trunc_hour(PlanningHorisont + PrevHours - WorkHours - RestHours,FactHours);
 	//.print("calc_fact_add_work FactHours", FactHours);
 	
 	// ADD
@@ -263,23 +263,20 @@ crosscost(source(t4),sink(r2),cost(1)).
 	MoreRestHours = MoreRestHours1 + BufTime;
 	MinRestHours = MinRestHours1 + BufTime; 
 	
-	//?start_plan_hour(StartPlanHour);
-	//StartNight = 24 - StartPlanHour;
-	//EndNight = (StartNight + 5) mod 24;
-	
 	?start_time(StartTime);
 	!hours_to_end(StartTime, PrevHours);
 
 	//FACT
-	!trunc_hour(24 + PrevHours - MoreRestHours,FactHours);
+	?planning_horisont(PlanningHorisont);
+	!trunc_hour(PlanningHorisont + PrevHours - MoreRestHours,FactHours);
 	//.print("calc_fact_add_rest FactHours ", FactHours);
 	
 	// ADD
 	MinMoreRestHours = math.max(0,MinRestHours - PastRestHours);
 	if (NightsWorked == 2) {
-		!get_nonight_hours(24 - MinMoreRestHours,AddHours,AddStart);
+		!get_nonight_hours(PlanningHorisont - MinMoreRestHours,AddHours,AddStart);
 	} else {
-		AddHours = 24 - MinMoreRestHours;
+		AddHours = PlanningHorisont - MinMoreRestHours;
 	};
 .
 
@@ -289,8 +286,9 @@ crosscost(source(t4),sink(r2),cost(1)).
 	// vacation(will_start(TimeStart1))
 
 	?max_buffer(BufTime);
+	?planning_horisont(PlanningHorisont);
 	TimeStart = TimeStart1 + BufTime;
-	!trunc_hour(24 - TimeStart,FactHours);
+	!trunc_hour(PlanningHorisont - TimeStart,FactHours);
 	//.print("calc_fact_add_vacation FactHours ", FactHours);
 .
 
@@ -309,18 +307,21 @@ crosscost(source(t4),sink(r2),cost(1)).
 
 +!get_nonight_hours(AH,0,0) : AH <= 0.
 
-+!get_nonight_hours(AvHours,AvHours,24 - AvHours) // planned start recently after night
-	: night_interval(_,NE) & (24 - AvHours) < (NE + 4). 
++!get_nonight_hours(AvHours,AvHours, PlanningHorisont - AvHours) // planned start recently after night
+	: planning_horisont(PlanningHorisont) & night_interval(_,NE) 
+	& (PlanningHorisont - AvHours) < (NE + 4). 
 		
-+!get_nonight_hours(AvHours,24 - NE, NE) // planned start shortly before night
-	: night_interval(NS,NE) & (24 - AvHours) < NE & (24 - AvHours) > NS - 4.
++!get_nonight_hours(AvHours,PlanningHorisont - NE, NE) // planned start shortly before night
+	: planning_horisont(PlanningHorisont) & night_interval(NS,NE) 
+	& (PlanningHorisont - AvHours) < NE & (PlanningHorisont - AvHours) > NS - 4.
 				
 +!get_nonight_hours(_,0,0).
 
 
-+!trunc_hour(Hours,24): Hours >= 24.			
++!trunc_hour(Hours,PlanningHorisont): planning_horisont(PlanningHorisont) & Hours >= PlanningHorisont.			
 +!trunc_hour(Hours,0): Hours <= 0.
-+!trunc_hour(Hours,math.round(Hours*100) * 0.01): Hours > 0 & Hours < 24.
++!trunc_hour(Hours,math.round(Hours*100) * 0.01)
+	: planning_horisont(PlanningHorisont) & Hours > 0 & Hours < PlanningHorisont.
 
 
 +!count_cost_by_direction(TeamID, CostTeamDir)
@@ -373,14 +374,14 @@ crosscost(source(t4),sink(r2),cost(1)).
 	?parsed(Sink, DirID, PartN);
 	?team_fact_add(TeamID, FactStartTime, AddStartTime);
 	//.print(team_fact_add(TeamID, FactStartTime, AddStartTime));
-	
+	?planning_horisont(PlanningHorisont);
 	PartStart = PartN*3;
 	if (PartStart > AddStartTime){
 		if (PartStart > FactStartTime) {
 			WorkFrom = PartStart;
 			CFlag = full_rest;
 		} else {
-			if (FactStartTime < 24) {
+			if (FactStartTime < PlanningHorisont) {
 				WorkFrom = FactStartTime;
 				CFlag = full_rest;
 			} else {
