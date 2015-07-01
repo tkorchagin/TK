@@ -2,5 +2,5 @@ MAS auctions {
 	infrastructure : Centralised
 	environment: uth_ss_team_Env 
 	
-	agents: uth_ss_team_main;
+	agents: uth_ss_team_main /src/asl/uth_ss_team/uth_ss_team_main;
 }

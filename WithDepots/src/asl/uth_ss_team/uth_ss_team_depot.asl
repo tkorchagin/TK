@@ -1,5 +1,6 @@
+tp_name_str("src/asl/util/tp/transportation.asl").
+
 infinity(10000000000).
-fakepart(fakepart).
 
 const_direction(10000).
 const_fact(100).
@@ -15,9 +16,6 @@ source(id(t4),exceed(1)).
 
 sink(id(r1),need(1)).
 sink(id(r2),need(1)).
-
-allowed_sources(sink(r1),sources([t1,t3,t4])). 
-allowed_sources(sink(r2),sources([t3,t4])).
 
 crosscost(source(t1),sink(r1),cost(650)).
 crosscost(source(t1),sink(r2),cost(2)).
@@ -38,7 +36,6 @@ crosscost(source(t4),sink(r2),cost(1)).
 	.print("depot started");
 	
 	!process_data;
-	//!add_fake_source;
 	.print("finished processing");
 	
 	?depotID(DepotID);
@@ -46,7 +43,8 @@ crosscost(source(t4),sink(r2),cost(1)).
 	!get_tp_name(DepotID, TpName);
 	+tpName(TpName);
 	
-	.create_agent(TpName,"src/transportation.asl");
+	?tp_name_str(TPNameSTR);
+	.create_agent(TpName, TPNameSTR);
 	.findall(source(id(ID),exceed(CAP)), source(id(ID),exceed(CAP)), Sources);
 	.findall(sink(id(Id),need(Cap)), sink(id(Id),need(Cap)),Sinks);
 	.findall(crosscost(source(Id1),sink(Id2),cost(Cost)),
@@ -134,22 +132,6 @@ crosscost(source(t4),sink(r2),cost(1)).
 						cost(CostTeamPart + CostTeamDir));
 				}
 			}
-		}
-	}
-.
-
-+!add_fake_source <-
-	.findall(PartNorm, sink(id(_),need(PartNorm)) & PartNorm > 0, NormListSpec);
-	TotalNorm = math.sum(NormListSpec);
-	.findall(TeamID, source(id(TeamID),_), TeamListSpec);
-	.length(TeamListSpec,TotalTeams);
-	TeamExcess = TotalTeams - TotalNorm;
-	if(TeamExcess >= 0) {
-		?infinity(Inf);
-		?fakepart(Fakepart);
-		+sink(id(Fakepart),need(TeamExcess+1));
-		for(source(id(TeamID),_)) {
-			+crosscost(source(TeamID), sink(Fakepart), cost(Inf));
 		}
 	}
 .

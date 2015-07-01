@@ -1,3 +1,4 @@
+depot_name_str("src/asl/uth_ss_team/uth_ss_team_depot.asl").
 
 +endOfFile
 <-
@@ -21,7 +22,8 @@
 			
 	for(.member(DepotID, DepotsArr)){
 		!get_dep_name(DepotID, DepName);
-		!create_agent(DepName,"./uth_ss_team_depot.asl", Flag);
+		?depot_name_str(DepotNameStr);
+		!create_agent(DepName, DepotNameStr, Flag);
 
 		if (Flag = true){
 			//.print(DepotID);

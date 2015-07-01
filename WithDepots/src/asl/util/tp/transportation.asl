@@ -13,11 +13,8 @@ check_delay(30).
 
 
 epsilon_factor(100).
-oclass_path("src/object_class.asl").
-pclass_path("src/person_class.asl").
-
-//oclass_path("object_class.asl").
-//pclass_path("person_class.asl").
+oclass_path("src/asl/util/tp/object_class.asl").
+pclass_path("src/asl/util/tp/person_class.asl").
 
 //////// Bertsekas algorithm
 
